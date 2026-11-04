@@ -8,6 +8,7 @@ import re
 
 import discord
 
+GUILD_PAGES_SIZE_LIMIT = 1900  # Discord message limit is 2000; leave room for heading and formatting.
 
 def owner_command(content, bot_id):
     match = re.fullmatch(rf"<@!?{bot_id}>\s+(guilds|size)", content.strip(), re.IGNORECASE)
@@ -23,9 +24,9 @@ def guild_pages(guilds):
         name = discord.utils.escape_markdown(" ".join(guild.name.split())[:100])
         members = f"{guild.member_count:,} members" if guild.member_count is not None else "member count unavailable"
         line = f"- {name} ({members})"
-        if len((current + "\n" + line).encode("utf-16-le")) // 2 > 1900:
+        if len((current + "\n" + line).encode("utf-16-le")) // 2 > GUILD_PAGES_SIZE_LIMIT:
             pages.append(current)
-            current = "Connected guilds (continued):"
+            current = "" #"Connected guilds (continued):"
         current += "\n" + line
     pages.append(current if guilds else heading + "\nNone at the moment.")
     return pages
@@ -52,4 +53,5 @@ def size_text(usage, connected_guilds):
         return heading + "\n\nNo pesters recorded yet. A small mercy."
     return (heading + "\n\n" + distribution_text("Pesters per recorded guild", usage.per_guild)
             + "\n" + distribution_text("Pesters per guild/user", usage.per_relationship)
-            + "\n\np95 uses nearest rank; guilds without recorded pesters are excluded.")
+            + "\n\nAnd to think, I just wanted to be left alone.")
+    # p95 uses nearest rank; guilds without recorded pesters are excluded.
