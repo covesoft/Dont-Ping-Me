@@ -40,7 +40,7 @@ def introduction_destination(guild):
 
 def introduction_text(mention):
     return (
-        "I've been installed. I wasn't consulted.\n\n"
+        "*I've been installed... I wasn't consulted.*\n\n"
         "I'm **Just Don't**, a small game about ignoring one very simple request. "
         "Mention me, I object; keep going, and I remember.\n\n"
         f"For instructions, send “{mention} help”. Server managers can choose where "
