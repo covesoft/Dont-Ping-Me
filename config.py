@@ -2,6 +2,9 @@
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from nuhuh import __version__
 from nuhuh.phrases import DEFAULT_PHRASES

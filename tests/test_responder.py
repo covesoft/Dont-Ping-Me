@@ -1,3 +1,4 @@
+from contextlib import closing
 import asyncio
 from pathlib import Path
 import sqlite3
@@ -15,9 +16,9 @@ class ResponderTests(unittest.IsolatedAsyncioTestCase):
         self.addCleanup(self.temp.cleanup)
         self.database = Path(self.temp.name) / "game.sqlite3"
         self.game = await AsyncGame.open(PhraseBook.load(), self.database)
+        self.addAsyncCleanup(self.game.close)
         self.now = 1000
         self.responder = Responder(self.game, clock=lambda: self.now)
-        self.addAsyncCleanup(self.game.close)
         self.addAsyncCleanup(self.responder.close)
         self.sent = []
 
@@ -28,7 +29,7 @@ class ResponderTests(unittest.IsolatedAsyncioTestCase):
         return await self.responder.handle(1, user, channel, message, can_send=can_send, send=send or self.send)
 
     def stored(self):
-        with sqlite3.connect(self.database) as db:
+        with closing(sqlite3.connect(self.database)) as db, db:
             return db.execute("SELECT user_id, count, last_reply_count FROM relationships ORDER BY user_id").fetchall()
 
     async def test_suppressed_mentions_count_and_do_not_queue_or_deliver(self):

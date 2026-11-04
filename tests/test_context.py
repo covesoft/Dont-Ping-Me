@@ -1,3 +1,4 @@
+from contextlib import closing
 import json
 from pathlib import Path
 import sqlite3
@@ -62,7 +63,7 @@ class ContextTests(unittest.TestCase):
     def test_schema_one_migrates_without_resetting_counts_or_inventing_absence(self):
         with tempfile.TemporaryDirectory() as folder:
             database = Path(folder) / "old.sqlite3"
-            with sqlite3.connect(database) as db:
+            with closing(sqlite3.connect(database)) as db, db:
                 db.execute("""CREATE TABLE relationships (
                     guild_id INTEGER, user_id INTEGER, count INTEGER,
                     last_phrase_id TEXT, last_reply_count INTEGER DEFAULT 0,
@@ -74,7 +75,7 @@ class ContextTests(unittest.TestCase):
                 self.assertEqual(reply.count, 11)
                 self.assertIsNone(reply.event_id)
                 self.assertEqual(game.ping(1, 2, now=1000000).event_id, "first_user_ping")
-            with sqlite3.connect(database) as db:
+            with closing(sqlite3.connect(database)) as db, db:
                 self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 2)
 
     def test_cooldowns_are_atomic_persistent_and_allow_exact_boundary(self):

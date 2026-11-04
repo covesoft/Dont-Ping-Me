@@ -1,3 +1,4 @@
+from contextlib import closing
 from concurrent.futures import ThreadPoolExecutor
 import copy
 import json
@@ -54,7 +55,7 @@ class GameTests(unittest.TestCase):
             first = game.ping(1, 1)
             game.delivered(first)
             game.ping(1, 1)  # Simulate a send failure: no acknowledgement.
-        with sqlite3.connect(self.database) as db:
+        with closing(sqlite3.connect(self.database)) as db, db:
             row = db.execute("SELECT count, last_phrase_id, last_reply_count FROM relationships").fetchone()
         self.assertEqual(row, (2, first.phrase_id, 1))
 
@@ -64,7 +65,7 @@ class GameTests(unittest.TestCase):
             second = game.ping(1, 1)
             game.delivered(second)
             game.delivered(first)
-        with sqlite3.connect(self.database) as db:
+        with closing(sqlite3.connect(self.database)) as db, db:
             row = db.execute("SELECT last_phrase_id, last_reply_count FROM relationships").fetchone()
         self.assertEqual(row, (second.phrase_id, 2))
 
