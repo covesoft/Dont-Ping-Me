@@ -27,34 +27,63 @@ replace verification of a particular release or hosted installation.
 - [x] Friendly help, snarkier help, and extra-help responses.
 - [x] Repeated-mention, emoji, and apology reactions.
 - [x] Bot profile artwork installed and reviewed.
+- [x] Owner/non-owner routing behaves as intended.
+- [x] Mentions receive responses in threads, forum posts, and voice text chat.
+- [x] A new installation receives its introduction.
+- [x] Relationship history persists across a restart.
 
-## Before the public jam release
+These additional confirmations were reported by the operator on November 4,
+2026. They do not claim every denied-permission or cancellation variant was
+manually exercised.
 
-- [ ] Review and commit the final documentation/test revision.
-- [ ] Confirm the selected commit passes the Ubuntu/Windows, Python 3.11/3.13 CI matrix.
-- [ ] Follow the README from a fresh clone, including the dependency-free demo.
-- [ ] Review the current phrase copy through natural play and the previews.
-- [ ] Check the documented channel permissions, including plain-text help fallback.
-- [ ] Check rapid pings: responses are suppressed and never queued.
-- [ ] Check two users in one channel and independent users/channels for pacing.
-- [ ] Stop/start the bot and confirm relationship history persists.
-- [ ] Check long text, negotiation, group incidents, milestones, and rare replies live.
-- [ ] Check a remembered callback across a restart and apology aftermath.
-- [ ] Confirm ordinary messages and unsupported contexts remain silent.
-- [ ] Confirm owner `guilds`/`size` reports work live, other users still play
-      normally with those words, and owner ordinary pings still count.
-- [ ] Test mentions/help in a thread, forum post, and voice text chat, including
-      denied thread posting and an invited private thread.
-- [ ] Test a new installation's delayed intro, system/bot-channel routing, and
-      cancellation on removal. Confirm restart/reconnect does not broadcast to existing guilds.
-- [ ] Check that tracked files and release attachments contain no credentials,
-      runtime data, logs, or private planning documents.
+## Verified release rehearsal — 0.7.3
+
+Checked November 4, 2026 against public commit `212c42c`:
+
+- [x] Fresh public clone reports version 0.7.3.
+- [x] Dependency-free demo, tier tour, encounter preview, and disposable play run
+      with third-party packages disabled.
+- [x] Interactive help/time controls and loading an edited custom phrase file work.
+- [x] Fresh virtual-environment installation from requirements.txt succeeds;
+      pip reports no broken requirements.
+- [x] All 112 tests pass locally on Linux/Python 3.13.17; all 157 SQLite
+      connections explicitly close with ResourceWarnings promoted to errors.
+- [x] All four hosted CI jobs pass: Ubuntu/Windows with Python 3.11/3.13.
+      [Verified run](https://github.com/covesoft/Dont-Ping-Me/actions/runs/41918815982).
+- [x] Missing-token startup gives an actionable error without attempting login.
+- [x] Tracked release files contain no matched Discord-token/private-key patterns
+      or excluded runtime/private-planning files. This is a scoped check of the
+      current tree, not a claim about all historical Git objects.
+- [x] Relative documentation links/anchors resolve; code fences are balanced.
+- [x] The operator has reviewed/softened the phrase copy and locked the name Just Don't.
 - [x] Select AGPL-3.0-only and align license text, project notices, and current documentation.
-- [ ] Verify the hosted help source URL is public and contains the actual running version.
-- [ ] Decide whether the submission includes a continuously hosted bot; verify
-      that installation if it does.
-- [ ] Record the jam deadline and submission fields, identify the release commit,
-      submit, and retain the submission link.
+
+## Before tagging and submitting
+
+- [ ] Commit the final release documentation and confirm CI is green for that
+      selected commit; the rehearsal above identifies the exact code verified.
+- [ ] Record the jam deadline, submission location, and required fields. Adapt
+      [SUBMISSION.md](SUBMISSION.md) to those requirements.
+- [ ] Confirm the running bot's configured source URL points to its public
+      corresponding source; use a commit or release URL when finalizing it.
+- [ ] Decide whether to include a hosted-bot invite; offline evaluation already
+      works without a Discord account or token.
+- [ ] Tag the chosen commit as v0.7.3, publish the release/submission, and retain
+      the release and submission links.
+
+## Extended playtesting
+
+These are useful follow-up probes, with automated coverage already in place.
+They do not require new gameplay or waiting for every rare line before release.
+
+- [ ] Explore denied thread posting, invited private threads, and help's
+      plain-text fallback in live Discord channels.
+- [ ] Check rapid/multi-user pings and independent channels for pacing/no backlog.
+- [ ] Observe callbacks, apology aftermath, long text, negotiation, group incidents,
+      milestones, and rare replies naturally during play.
+- [ ] Try introduction fallback routing/removal cancellation and confirm a
+      restart/reconnect does not broadcast to existing guilds.
+- [ ] Confirm irrelevant messages and unsupported contexts remain silent.
 
 See [DEVELOPING.md](DEVELOPING.md#testing-and-review) for verification commands and
 [OPERATING.md](OPERATING.md) for setup and data handling. Add a date and commit

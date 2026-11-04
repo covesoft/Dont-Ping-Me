@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.3 — 2026-11-04
+
+- Finalize the public name as **Just Don't** and polish the owner-report and
+  installation-introduction presentation.
+- Keep report tests independent of the persona's total-pester wording and
+  closing line; clarify the intentional built-in prefix-parser override.
+- Confirm owner/non-owner routing, thread/forum/voice responses, installation
+  introduction delivery, and restart persistence through live play.
+- Verify the release from a fresh clone, including the dependency-free CLI,
+  customization, complete test suite, and Ubuntu/Windows Python 3.11/3.13 CI.
+- Retain gameplay, dependencies, and database schema 5; no reset required.
+
 ## 0.7.0 — 2026-11-04
 
 - Add exact `@bot guilds` and `@bot size` commands for configured `OWNER_IDS`.
