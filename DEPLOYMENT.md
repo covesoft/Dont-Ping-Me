@@ -2,8 +2,8 @@
 
 The supplied systemd template runs one copy as a dedicated `nuhuh` user, from
 `/opt/nuhuh`, with the token in `/etc/nuhuh.env`. Change the template paths/user
-if you use an existing service account. This file prepares deployment; it does
-not mean a hosted service has been installed or verified.
+if you use an existing service account. For local setup, permissions, and data
+management, see [OPERATING.md](OPERATING.md).
 
 On an Ubuntu host with Git, Python 3.11+, and the matching venv package available:
 
@@ -16,8 +16,7 @@ sudo -u nuhuh /opt/nuhuh/.venv/bin/python -m pip install -r /opt/nuhuh/requireme
 sudoedit /etc/nuhuh.env
 ```
 
-Use the revision containing v0.5.0; the new files must be pushed to your
-repository before a fresh clone can receive them. In `/etc/nuhuh.env`, put:
+Review the selected release before installing. In `/etc/nuhuh.env`, put:
 
 ```text
 NUHUH_DISCORD_TOKEN=your_private_token
@@ -60,5 +59,5 @@ For a simple consistent backup, stop the service, copy the database, then start
 again. Keep backups private and apply record deletions to retained copies.
 
 After deployment, verify a mention, the cooldown, a clean stop/start with the
-same count history, and service startup after reboot. The service template itself
-has not been run against the user's VPS from this workspace.
+same count history, and service startup after reboot. Track these checks for
+your installation using the [release checklist](RELEASE_CHECKLIST.md).

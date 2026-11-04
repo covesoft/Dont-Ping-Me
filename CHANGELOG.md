@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.1 — 2026-11-04
+
+- Reworked the README as a friendly introduction with quick play instructions
+  and a credential-free offline demo. Moved detailed mechanics/customization to
+  DEVELOPING.md and Discord setup/operation to OPERATING.md.
+- Removed exact phrase totals from public overview copy and replaced the
+  shipping-copy test's fixed total with uniqueness and history-window variety
+  checks. Added coverage for valid additions, removals, and rewrites.
+- Updated the release checklist to distinguish confirmed live checks from
+  remaining verification. Gameplay, phrase content, database format, and license
+  are unchanged.
+
 ## 0.5.0 — 2026-11-04
 
 - Added occasional reactions to 350-character messages, Unicode/custom emoji,

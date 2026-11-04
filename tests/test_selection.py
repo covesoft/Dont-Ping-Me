@@ -1,10 +1,12 @@
 from dataclasses import replace
+import copy
+import json
 from pathlib import Path
 import tempfile
 import unittest
 
-from nuhuh.engine import Game
-from nuhuh.phrases import Context, PhraseBook
+from nuhuh.engine import Game, HISTORY_LIMIT
+from nuhuh.phrases import Context, DEFAULT_PHRASES, PhraseBook
 
 
 class SelectionTests(unittest.TestCase):
@@ -55,14 +57,36 @@ class SelectionTests(unittest.TestCase):
         self.assertIsNone(disabled.event_for(context, 1, 1, 10))
         self.assertIsNone(book.event_for(Context(False, False, 0, 121), 1, 1, 10))
 
-    def test_shipping_copy_has_unique_ids_text_and_adequate_pool_sizes(self):
-        pools = [tier.phrases for tier in self.book.tiers] + [event.phrases for event in self.book.events]
+    def assert_copy_quality(self, book):
+        pools = [pool.phrases for pool in (*book.tiers, *book.events)]
         phrases = [phrase for pool in pools for phrase in pool]
-        self.assertEqual(len(phrases), 243)
         self.assertEqual(len({phrase.id for phrase in phrases}), len(phrases))
         self.assertEqual(len({phrase.text for phrase in phrases}), len(phrases))
-        self.assertTrue(all(len(tier.phrases) >= 15 for tier in self.book.tiers))
-        self.assertTrue(all(len(pool.phrases) >= 8 for pool in self.book.events))
+        # The supplied copy should offer alternatives beyond the delivered
+        # history window. This is an editorial check, not a custom-file limit.
+        for pool in (*book.tiers, *book.events):
+            with self.subTest(pool=pool.id):
+                self.assertGreater(len(pool.phrases), HISTORY_LIMIT)
+
+    def test_shipping_copy_has_unique_ids_text_and_adequate_pool_sizes(self):
+        self.assert_copy_quality(self.book)
+
+    def test_copy_quality_allows_additions_removals_and_rewrites(self):
+        original = json.loads(DEFAULT_PHRASES.read_text(encoding="utf-8"))
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "edited.json"
+            for change in ("add", "remove", "rewrite"):
+                with self.subTest(change=change):
+                    raw = copy.deepcopy(original)
+                    pool = raw["tiers"][0]["phrases"]
+                    if change == "add":
+                        pool.append({"id": "test.extra_copy", "text": "A new objection for the test edition."})
+                    elif change == "remove":
+                        pool.pop()
+                    else:
+                        pool[0]["text"] = "The opening objection has been revised for this test."
+                    path.write_text(json.dumps(raw), encoding="utf-8")
+                    self.assert_copy_quality(PhraseBook.load(path))
 
     def test_recent_history_avoids_near_repeats_across_restarts(self):
         with tempfile.TemporaryDirectory() as folder:

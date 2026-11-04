@@ -1,39 +1,51 @@
 # Release checklist
 
-## Implemented and checked locally
+Use this checklist before tagging or submitting a release. The checks already
+marked reflect completed implementation and reported live play; they do not
+replace verification of a particular release or hosted installation.
 
-- [x] Six count tiers and 243 phrases, including message reactions, callbacks, and rare material.
-- [x] Friendly/snarky exact help, with no game count/timestamp/participant changes.
+## Implemented and covered by automated tests
+
+- [x] Six count tiers, context pools, message reactions, callbacks, and rare material.
+- [x] Friendly/snarky exact help without count, timestamp, or participant changes.
 - [x] Shared help/game cooldowns and embed-to-text permission fallback.
-- [x] Guaranteed enabled first-contact/return events and seeded recent/tier mixing.
-- [x] CLI interactive play, event demo, tier tour, configurable IDs, and virtual time.
-- [x] Atomic counts, persistent cooldowns, bounded replay protection, and send failure handling.
-- [x] Database handles explicitly close; queued close survives caller cancellation.
-- [x] Older alpha schemas receive a reset instruction; migration code removed.
-- [x] Dotenv dependency and secret-free environment example declared.
-- [x] Setup/customization guide, data/privacy notes, MIT license, and Linux service template.
-- [x] Shared Discord/CLI message cues and deterministic encounter gates.
-- [x] Delivery-aware bounded memories, apology aftermath, exact milestones, and group incidents.
+- [x] Seeded event/tier selection, bounded delivered history, and replay protection.
+- [x] Delivery-aware memories, apology aftermath, milestones, and group incidents.
+- [x] CLI play, demos, previews, adjustable IDs, and virtual time.
+- [x] Atomic counts, failed-send handling, and cancellation-safe database shutdown.
+- [x] Invalid phrase files and incompatible alpha schemas produce useful errors.
+- [x] Copy checks permit phrase additions/removals/rewrites without an exact total.
+- [x] Setup guides, privacy notes, third-party notices, and a Linux service template.
 
-## Before tagging the public jam build
+## Confirmed through live play
 
-- [ ] Apply/commit this revision to the repository and push it.
-- [ ] Confirm the configured Ubuntu/Windows, Python 3.11/3.13 CI matrix passes.
-- [ ] Read the phrase pools or play `--demo` and `--tour`; revise any lines that miss the intended voice.
-- [ ] Preview the new copy with `--encounters`; test typed messages in a disposable CLI game.
-- [ ] Start `discordbot.py` using the existing private `.env` and minimal permissions.
-- [ ] Ping repeatedly, including intervals under five seconds: replies are suppressed, never queued.
-- [ ] Test exact help before/after a ping and extra-help wording, allowing five seconds between responses.
-- [ ] Test two users in one channel and independent users/channels for correct pacing.
-- [ ] Stop/start the bot; relationship history and response-attempt pacing persist.
-- [ ] Confirm ordinary messages and unsupported contexts produce no bot responses.
-- [ ] Verify long text, emoji, repeated mentions, and short apology/bargaining reactions
-      live; they are probabilistic, and first contact/returns retain priority.
-- [ ] Confirm a delivered setup can receive a later callback across a restart.
-- [ ] Confirm the final hosted/release setup includes no secret, database, log, or private docs file.
-- [ ] Decide whether a hosted bot is part of the jam delivery; verify it if so.
-- [ ] Record the actual jam deadline and submission fields, submit, and keep the receipt/link.
+- [x] Basic startup, shutdown, and a direct mention-response in a test guild.
+- [x] Friendly help, snarkier help, and extra-help responses.
+- [x] Repeated-mention, emoji, and apology reactions.
+- [x] Bot profile artwork installed and reviewed.
 
-The user already verified the v0.2 bot's basic startup, shutdown, and live
-mention response, and installed the approved Discord artwork. The checks above
-apply to this new revision; no new live verification is claimed by the code tests.
+## Before the public jam release
+
+- [ ] Review and commit the final documentation/test revision.
+- [ ] Confirm the selected commit passes the Ubuntu/Windows, Python 3.11/3.13 CI matrix.
+- [ ] Follow the README from a fresh clone, including the dependency-free demo.
+- [ ] Review the current phrase copy through natural play and the previews.
+- [ ] Check the documented channel permissions, including plain-text help fallback.
+- [ ] Check rapid pings: responses are suppressed and never queued.
+- [ ] Check two users in one channel and independent users/channels for pacing.
+- [ ] Stop/start the bot and confirm relationship history persists.
+- [ ] Check long text, negotiation, group incidents, milestones, and rare replies live.
+- [ ] Check a remembered callback across a restart and apology aftermath.
+- [ ] Confirm ordinary messages and unsupported contexts remain silent.
+- [ ] Check that tracked files and release attachments contain no credentials,
+      runtime data, logs, or private planning documents.
+- [ ] Settle the intended distribution license and align public license references.
+- [ ] Decide whether the submission includes a continuously hosted bot; verify
+      that installation if it does.
+- [ ] Record the jam deadline and submission fields, identify the release commit,
+      submit, and retain the submission link.
+
+See [DEVELOPING.md](DEVELOPING.md#testing-and-review) for verification commands and
+[OPERATING.md](OPERATING.md) for setup and data handling. Add a date and commit
+when recording a new release verification; automated tests alone do not establish
+live Discord behavior.
