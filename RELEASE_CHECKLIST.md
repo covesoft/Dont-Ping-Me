@@ -2,7 +2,9 @@
 
 ## Implemented and checked locally
 
-- [x] Six count tiers and 135 phrases, including the evergreen final tier.
+- [x] Six count tiers and 147 phrases, including the evergreen final tier and extra-help pool.
+- [x] Friendly/snarky exact help, with no game count/timestamp/participant changes.
+- [x] Shared help/game cooldowns and embed-to-text permission fallback.
 - [x] Guaranteed enabled first-contact/return events and seeded recent/tier mixing.
 - [x] CLI interactive play, event demo, tier tour, configurable IDs, and virtual time.
 - [x] Atomic counts, persistent cooldowns, bounded replay protection, and send failure handling.
@@ -18,6 +20,7 @@
 - [ ] Read the phrase pools or play `--demo` and `--tour`; revise any lines that miss the intended voice.
 - [ ] Start `discordbot.py` using the existing private `.env` and minimal permissions.
 - [ ] Ping repeatedly, including intervals under five seconds: replies are suppressed, never queued.
+- [ ] Test exact help before/after a ping and extra-help wording, allowing five seconds between responses.
 - [ ] Test two users in one channel and independent users/channels for correct pacing.
 - [ ] Stop/start the bot; relationship history and response-attempt pacing persist.
 - [ ] Confirm ordinary messages and unsupported contexts produce no bot responses.

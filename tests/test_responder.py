@@ -106,3 +106,40 @@ class ResponderTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((await pending).status, "send_failed")
         self.assertEqual((await self.handle(message=2)).status, "closing")
         self.assertEqual(self.stored(), [(1, 1, 0)])
+
+    async def test_help_does_not_count_and_shares_pacing_with_game_replies(self):
+        sent_help = []
+
+        async def help_send(info):
+            sent_help.append(info.count)
+
+        outcome = await self.responder.handle_help(1, 1, 10, 1, can_send=True, send=help_send)
+        self.assertEqual(outcome.status, "sent")
+        self.assertEqual(sent_help, [0])
+        self.assertEqual(self.stored(), [])
+        self.now += 1
+        self.assertEqual((await self.handle(message=2)).status, "suppressed")
+        self.assertEqual(self.stored(), [(1, 1, 0)])
+        self.now += 4
+        outcome = await self.responder.handle_help(1, 1, 10, 3, can_send=True, send=help_send)
+        self.assertEqual(outcome.status, "sent")
+        self.assertEqual(sent_help, [0, 1])
+        self.assertEqual(self.stored(), [(1, 1, 0)])
+
+    async def test_inflight_help_suppresses_other_sends_without_creating_a_participant(self):
+        started, release = asyncio.Event(), asyncio.Event()
+
+        async def slow_help(info):
+            started.set()
+            await release.wait()
+
+        task = asyncio.create_task(self.responder.handle_help(1, 1, 10, 1, can_send=True, send=slow_help))
+        await asyncio.wait_for(started.wait(), 2)
+        try:
+            self.now += 10
+            outcome = await self.handle(user=2, message=2)
+            self.assertEqual(outcome.status, "suppressed")
+            self.assertEqual(self.stored(), [(2, 1, 0)])
+        finally:
+            release.set()
+            await task

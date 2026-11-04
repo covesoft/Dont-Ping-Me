@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 import time
 
-from .engine import Reply, timestamp
+from .engine import HelpInfo, Reply, timestamp
 
 log = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class Outcome:
     status: str
-    reply: Reply | None = None
+    reply: Reply | HelpInfo | None = None
 
 
 class Responder:
@@ -32,13 +32,26 @@ class Responder:
         self._tasks = set()
         self._closing = False
 
-    async def handle(self, guild_id, user_id, channel_id, message_id, *, can_send, send):
+    async def handle(self, guild_id, user_id, channel_id, message_id, *, can_send, send, response_event=None):
+        return await self._handle(guild_id, user_id, channel_id, message_id,
+                                  can_send=can_send, send=send, response_event=response_event)
+
+    async def handle_help(self, guild_id, user_id, channel_id, message_id, *, can_send, send):
+        return await self._handle(guild_id, user_id, channel_id, message_id,
+                                  can_send=can_send, send=send, is_help=True)
+
+    async def _handle(self, guild_id, user_id, channel_id, message_id, *, can_send, send,
+                      is_help=False, response_event=None):
         if self._closing:
             return Outcome("closing")
         task = asyncio.current_task()
         self._tasks.add(task)
         try:
-            reply = await self.game.ping(guild_id, user_id, now=self.clock(), message_id=message_id)
+            if is_help:
+                reply = await self.game.help(guild_id, user_id, now=self.clock(), message_id=message_id)
+            else:
+                reply = await self.game.ping(guild_id, user_id, now=self.clock(), message_id=message_id,
+                                             response_event=response_event)
             if reply is None:
                 return Outcome("duplicate")
             if not can_send:
@@ -59,11 +72,12 @@ class Responder:
                     return Outcome("suppressed", reply)
                 try:
                     async with asyncio.timeout(self.send_timeout):
-                        await send(reply.text)
+                        await send(reply if isinstance(reply, HelpInfo) else reply.text)
                 except Exception:
                     log.warning("Reply attempt failed in guild %s, channel %s", guild_id, channel_id, exc_info=True)
                     return Outcome("send_failed", reply)
-                await self.game.delivered(reply)
+                if isinstance(reply, Reply):
+                    await self.game.delivered(reply)
                 return Outcome("sent", reply)
             finally:
                 self._users.discard(user_key)

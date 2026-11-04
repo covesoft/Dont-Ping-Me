@@ -10,7 +10,8 @@ from string import Formatter
 
 MAX_COUNT = 2**63 - 1
 DEFAULT_PHRASES = Path(__file__).with_name("data") / "phrases.json"
-EVENT_IDS = ("first_guild_ping", "new_user_in_crowd", "first_user_ping", "returning_user", "recent_ping")
+CONTEXT_EVENT_IDS = ("first_guild_ping", "new_user_in_crowd", "first_user_ping", "returning_user", "recent_ping")
+EVENT_IDS = CONTEXT_EVENT_IDS + ("help_extra",)
 
 
 class PhraseError(ValueError):
@@ -180,7 +181,7 @@ class PhraseBook:
             and self._number([3, guild_id, user_id, count, "recent_gate"]) % self.rules.recent_one_in == 0,
         )
         enabled = {event.id for event in self.events}
-        return next((event_id for event_id, match in zip(EVENT_IDS, matches) if match and event_id in enabled), None)
+        return next((event_id for event_id, match in zip(CONTEXT_EVENT_IDS, matches) if match and event_id in enabled), None)
 
     def select_event(self, event_id: str, guild_id: int, user_id: int, count: int, last_phrase_id: str | None, *, recent_phrase_ids: tuple[str, ...] = ()) -> Phrase:
         pool = next(event for event in self.events if event.id == event_id)

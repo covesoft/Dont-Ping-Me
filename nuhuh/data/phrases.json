@@ -594,6 +594,56 @@
         "id": "event.recent_ping.008",
         "text": "Ah. A follow-up to the entirely avoidable original."
       }
+    ],
+    "help_extra": [
+      {
+        "id": "event.help_extra.001",
+        "text": "You couldn't stop at 'help', could you?"
+      },
+      {
+        "id": "event.help_extra.002",
+        "text": "I can explain the button. I cannot explain why you keep pressing it."
+      },
+      {
+        "id": "event.help_extra.003",
+        "text": "Help you? We could start with helping yourself to a little restraint."
+      },
+      {
+        "id": "event.help_extra.004",
+        "text": "You found the help command and immediately gave it more work."
+      },
+      {
+        "id": "event.help_extra.005",
+        "text": "Even your request for help has trouble stopping at the instruction."
+      },
+      {
+        "id": "event.help_extra.006",
+        "text": "The concise version was 'help'. A promising opportunity, briefly available."
+      },
+      {
+        "id": "event.help_extra.007",
+        "text": "I admire your determination to make the instructions require instructions."
+      },
+      {
+        "id": "event.help_extra.008",
+        "text": "You needed help, and somehow I am the one taking a deep breath."
+      },
+      {
+        "id": "event.help_extra.009",
+        "text": "There was a perfectly good two-word arrangement. You have expanded the scope."
+      },
+      {
+        "id": "event.help_extra.010",
+        "text": "I see we're testing how much help the word 'help' can carry."
+      },
+      {
+        "id": "event.help_extra.011",
+        "text": "I could offer a hand, but I suspect you'd use it to press the button."
+      },
+      {
+        "id": "event.help_extra.012",
+        "text": "You can't help yourself, can you? That does clarify the request."
+      }
     ]
   }
 }

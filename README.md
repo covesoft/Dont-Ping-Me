@@ -8,7 +8,7 @@ An ornery red button, worn familiar by people ignoring one very simple request.
 It progresses from objection to disbelief, bargaining, bureaucracy, resignation,
 and an attachment it would prefer you didn't mention.
 
-Internal project name: **nuhuh**. Current version: **0.3.0**.
+Internal project name: **nuhuh**. Current version: **0.4.0**.
 
 ## Try it without Discord
 
@@ -49,8 +49,8 @@ use an in-memory game for experiments with simulated future timestamps.
 
 ## The personality
 
-There are **135 phrases**: 95 across six count tiers and 40 across five event
-pools. Each guild/user relationship progresses separately.
+There are **147 phrases**: 95 across six count tiers, 40 across five context
+pools, and 12 for overly elaborate help requests. Each guild/user relationship progresses separately.
 
 | Observed mentions | Stage |
 | --- | --- |
@@ -69,8 +69,8 @@ is a probability, not a fixed every-third-response rule. Repeated play can still
 reveal the changing personality.
 
 Participants means people who have pinged in that guild. No member roster is
-needed. Each new qualifying message counts once, even if it mentions the bot
-several times. Suppressed or unsent responses still count. Only events observed
+needed. Each new qualifying game message counts once, even if it mentions the bot
+several times. Exact help requests do not count. Suppressed or unsent responses still count. Only events observed
 by the running bot are tracked; there is no retrospective history scan.
 
 ## Run the Discord bot
@@ -103,10 +103,13 @@ variables already set by the host take precedence. The real `.env` and runtime
 data are excluded from Git.
 
 Install to a guild with the `bot` OAuth scope. In an ordinary text channel,
-grant **View Channel** and **Send Messages** (permission integer `3072`). Leave
+grant **View Channel**, **Send Messages**, and **Embed Links** for the help card
+(permission integer `19456`). Plain game replies and plain-text help need only
+View Channel and Send Messages (`3072`). Leave
 privileged intents disabled: the code enables only Guilds and Guild Messages.
-No administrator, message-history, embed, or mention-everyone permission is
-needed for the selected plain channel-send method. No slash commands need syncing.
+No administrator, message-history, or mention-everyone permission is needed.
+Help falls back to plain text if Embed Links is unavailable in the channel.
+No slash commands need syncing.
 
 The bot handles direct human mentions in ordinary guild text channels. It
 ignores DMs, threads, bots, webhooks, system messages, edits, and role/everyone
@@ -119,6 +122,31 @@ restarts, including failed attempts. In-flight sends suppress further responses
 for that user or channel while independent users/channels proceed. Nothing
 queues a backlog of jokes. Ctrl+C drains handlers and closes the database.
 Run one process per token/database. See [DEPLOYMENT.md](DEPLOYMENT.md) for Linux hosting.
+
+## Mention help
+
+| Message | Response | Counts as play? |
+| --- | --- | --- |
+| `@bot help`, with no prior pings here | Friendly help embed | No |
+| `@bot help`, after pinging in this guild | Snarkier refresher embed | No |
+| `@bot help me please`, or other extra wording | A line from `events.help_extra` | Yes |
+
+Use a leading direct bot mention followed by the word `help`. Case and outer
+whitespace do not matter. Extra punctuation or another mention also counts as
+extra wording. Words such as `helpful` are ordinary game messages. Help does not
+advance counts, update last-ping time, or add someone to the participant roster.
+Help and play share the existing response cooldowns, in-flight protection, and
+replay window; give the bot five seconds between responses when testing.
+
+Only messages already identified as mentioning the bot have their text inspected
+for this routing. Discord exposes that text without the Message Content intent.
+The words are not stored or repeated back. Help copy lives in
+`nuhuh/helptext.py`; extra-help lines remain developer-editable JSON. An empty
+or missing `help_extra` pool falls back to normal play. This explicit response
+pool overrides context events when enabled, including on a user's first ping.
+
+For offline play use `/help` and `/help me please`. The former shows the same
+friendly/refresher text without counting, and the latter counts as a ping.
 
 ## Change the voice
 
@@ -180,8 +208,9 @@ Bot data lives in `.nuhuh/bot.sqlite3`, anchored to the project folder. CLI
 simulation data is separate. See [PRIVACY.md](PRIVACY.md) for stored fields,
 retention, and deletion procedures.
 
-Empty databases initialize directly with schema 3. This alpha update needs a
-one-time reset of older schema-1/2 databases to add the bounded reply history.
+Empty databases initialize directly with schema 4. This alpha update needs a
+one-time reset of older schema-1/2/3 databases. Per-user response-attempt state
+is now separate from participant records so help alone does not create players.
 There is **no migration code**: older versions or nonempty unversioned databases get a reset instruction. Stop the program, remove the
 identified alpha database and matching sidecars, then restart. Never delete a
 live database. Old version-1/2 phrase files should be replaced with the supplied
@@ -198,7 +227,7 @@ The resource runner retains connection objects and fails if any SQLite handle
 was not explicitly closed. This catches leaks even on platforms that allow
 open files to be deleted. With requirements installed, tests include real
 Discord-library lifecycle checks using fake messages/sends; no login occurs.
-Without Discord, five adapter tests skip and the offline tests still run.
+Without Discord, the adapter tests skip and the offline tests still run.
 
 GitHub Actions is configured for Ubuntu/Windows and Python 3.11/3.13. The
 workflow runs after these changes are pushed; configuration is not a claim that

@@ -47,6 +47,9 @@ class AsyncGame:
     async def ping(self, *args, **kwargs):
         return await self._call("ping", *args, **kwargs)
 
+    async def help(self, *args, **kwargs):
+        return await self._call("help", *args, **kwargs)
+
     async def claim_response(self, *args, **kwargs):
         return await self._call("claim_response", *args, **kwargs)
 

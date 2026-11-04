@@ -5,6 +5,7 @@ from discord.ext import commands
 
 from config import USER_REPLY_COOLDOWN_SECONDS, CHANNEL_REPLY_COOLDOWN_SECONDS, SEND_TIMEOUT_SECONDS
 from nuhuh.responder import Responder
+from nuhuh.helptext import HELP_COLOR, HELP_FOOTER, help_text, mention_kind
 
 
 class Pings(commands.Cog):
@@ -28,13 +29,34 @@ class Pings(commands.Cog):
         me = message.guild.me
         permissions = message.channel.permissions_for(me) if me is not None else None
         can_send = bool(permissions and permissions.view_channel and permissions.send_messages)
+        kind = mention_kind(message.content, self.bot.user.id)
+
+        if kind == "help":
+            async def send_help(info):
+                title, description = help_text(info.count > 0)
+                mentions = discord.AllowedMentions.none()
+                if permissions and permissions.embed_links:
+                    embed = discord.Embed(title=title, description=description, color=HELP_COLOR)
+                    embed.set_footer(text=HELP_FOOTER)
+                    await message.channel.send(embed=embed, allowed_mentions=mentions)
+                else:
+                    await message.channel.send(
+                        f"**{title}**\n\n{description}\n\n{HELP_FOOTER}", allowed_mentions=mentions
+                    )
+
+            await self.responder.handle_help(
+                message.guild.id, message.author.id, message.channel.id, message.id,
+                can_send=can_send, send=send_help,
+            )
+            return
 
         async def send(text):
             await message.channel.send(text, allowed_mentions=discord.AllowedMentions.none())
 
+        options = {"response_event": "help_extra"} if kind == "help_extra" else {}
         await self.responder.handle(
             message.guild.id, message.author.id, message.channel.id, message.id,
-            can_send=can_send, send=send,
+            can_send=can_send, send=send, **options,
         )
 
     async def cog_unload(self):

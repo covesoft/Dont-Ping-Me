@@ -6,7 +6,7 @@ Just Don't is a small Discord game about ignoring one very simple instruction.
 Mention it, and it objects. Keep going, and its objections become a relationship:
 disbelief, bargaining, paperwork, resignation, and reluctant familiarity.
 
-The game has 135 editable phrases, six stages, and contextual replies for first
+The game has 147 editable phrases, six stages, and contextual replies for first
 contact, returning users, recent pings, and joining an existing group of pingers.
 Its seeded choices give each user a distinct progression within each server.
 

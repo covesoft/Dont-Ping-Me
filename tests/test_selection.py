@@ -58,7 +58,7 @@ class SelectionTests(unittest.TestCase):
     def test_shipping_copy_has_unique_ids_text_and_adequate_pool_sizes(self):
         pools = [tier.phrases for tier in self.book.tiers] + [event.phrases for event in self.book.events]
         phrases = [phrase for pool in pools for phrase in pool]
-        self.assertEqual(len(phrases), 135)
+        self.assertEqual(len(phrases), 147)
         self.assertEqual(len({phrase.id for phrase in phrases}), len(phrases))
         self.assertEqual(len({phrase.text for phrase in phrases}), len(phrases))
         self.assertTrue(all(len(tier.phrases) >= 15 for tier in self.book.tiers))

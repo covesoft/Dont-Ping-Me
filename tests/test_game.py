@@ -221,6 +221,16 @@ class CLITests(unittest.TestCase):
                 self.assertIn("/ " + name + "]", result.stdout)
             self.assertFalse(database.parent.exists())
 
+    def test_interactive_help_is_friendly_then_snarky_and_extra_words_count(self):
+        result = self.run_cli("--db", ":memory:", "--debug",
+                              input="/help\n\n/help\n/help me please\n/quit\n")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Just Don't — how to play", result.stdout)
+        self.assertIn("A refresher. Apparently.", result.stdout)
+        self.assertIn("[1 / objection] [first_guild_ping]", result.stdout)
+        self.assertIn("[2 / objection] [help_extra]", result.stdout)
+        self.assertNotIn("[3 /", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

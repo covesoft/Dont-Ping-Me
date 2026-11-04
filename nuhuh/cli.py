@@ -8,6 +8,7 @@ import time
 from . import __version__
 from .engine import Game, positive_id, timestamp
 from .phrases import DEFAULT_PHRASES, PhraseBook
+from .helptext import HELP_FOOTER, help_text, mention_kind
 
 
 def _id(text: str) -> int:
@@ -96,9 +97,10 @@ def main(argv: list[str] | None = None) -> int:
         with Game(phrases, database) as game:
             offset = 0
 
-            def ping() -> None:
+            def ping(response_event=None) -> None:
                 nonlocal offset
-                reply = game.ping(args.guild_id, args.user_id, now=time.time() + offset)
+                reply = game.ping(args.guild_id, args.user_id, now=time.time() + offset,
+                                  response_event=response_event)
                 prefix = f"[{reply.count} / {reply.tier_id}] " if args.debug else ""
                 if args.debug and reply.event_id:
                     prefix += f"[{reply.event_id}] "
@@ -111,7 +113,7 @@ def main(argv: list[str] | None = None) -> int:
                     ping()
                 return 0
             print("Just Don't — offline demo")
-            print(f"Guild {args.guild_id}, user {args.user_id}. Enter to ping; /wait SECONDS; /quit to leave.")
+            print(f"Guild {args.guild_id}, user {args.user_id}. Enter to ping; /help; /wait SECONDS; /quit to leave.")
             while True:
                 try:
                     command = input("> ").strip()
@@ -120,6 +122,15 @@ def main(argv: list[str] | None = None) -> int:
                     break
                 if command.casefold() in ("/quit", "quit", "exit"):
                     break
+                kind = mention_kind(f"<@1> {command[1:]}", 1) if command.startswith("/") else "ping"
+                if kind == "help":
+                    info = game.help(args.guild_id, args.user_id, now=time.time() + offset)
+                    title, description = help_text(info.count > 0)
+                    print(f"{title}\n\n{description}\n\n{HELP_FOOTER}")
+                    continue
+                if kind == "help_extra":
+                    ping(response_event="help_extra")
+                    continue
                 if command.casefold().startswith("/wait "):
                     try:
                         seconds = _seconds(command[6:].strip())
@@ -130,7 +141,7 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"Clock advanced by {seconds:g} seconds.")
                     continue
                 if command:
-                    print("Press Enter to ping, use /wait SECONDS, or type /quit.")
+                    print("Press Enter to ping, use /help or /wait SECONDS, or type /quit.")
                     continue
                 ping()
     except KeyboardInterrupt:

@@ -44,6 +44,13 @@ class Reply:
     other_users: int = 0
 
 
+@dataclass(frozen=True)
+class HelpInfo:
+    guild_id: int
+    user_id: int
+    count: int
+
+
 class Game:
     """One SQLite connection; use from one thread and close after use.
 
@@ -60,7 +67,7 @@ class Game:
                 tables = self._db.execute(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
                 ).fetchall()
-                if version not in (0, 3) or (version == 0 and tables):
+                if version not in (0, 4) or (version == 0 and tables):
                     raise ValueError(
                         f"Unsupported alpha database schema {version} at {database}. "
                         "Stop the program, delete this database and its matching sidecars, then restart. "
@@ -74,7 +81,6 @@ class Game:
                         last_phrase_id TEXT,
                         last_reply_count INTEGER NOT NULL DEFAULT 0,
                         last_ping_at REAL,
-                        last_attempt_at REAL,
                         recent_phrase_ids TEXT NOT NULL DEFAULT '[]',
                         PRIMARY KEY (guild_id, user_id)
                     )
@@ -83,11 +89,15 @@ class Game:
                     message_id INTEGER PRIMARY KEY, observed_at REAL NOT NULL
                 )""")
                 self._db.execute("CREATE INDEX IF NOT EXISTS seen_age ON seen_messages(observed_at)")
+                self._db.execute("""CREATE TABLE IF NOT EXISTS user_state (
+                    guild_id INTEGER NOT NULL, user_id INTEGER NOT NULL,
+                    last_attempt_at REAL NOT NULL, PRIMARY KEY(guild_id, user_id)
+                )""")
                 self._db.execute("""CREATE TABLE IF NOT EXISTS channel_state (
                     guild_id INTEGER NOT NULL, channel_id INTEGER NOT NULL,
                     last_attempt_at REAL NOT NULL, PRIMARY KEY(guild_id, channel_id)
                 )""")
-                self._db.execute("PRAGMA user_version = 3")
+                self._db.execute("PRAGMA user_version = 4")
         except BaseException:
             self._db.close()
             raise
@@ -103,22 +113,42 @@ class Game:
                 self._db.execute("ROLLBACK")
             raise
 
-    def ping(self, guild_id: int, user_id: int, *, now: float | None = None, message_id: int | None = None) -> Reply | None:
+    def _observe_message(self, message_id: int | None, now: float) -> bool:
+        """Called within a transaction, shared by help and game interactions."""
+        if message_id is None:
+            return True
+        positive_id(message_id)
+        self._db.execute("DELETE FROM seen_messages WHERE observed_at < ?", (now - DEDUPE_SECONDS,))
+        return bool(self._db.execute(
+            "INSERT OR IGNORE INTO seen_messages(message_id, observed_at) VALUES (?, ?)",
+            (message_id, now),
+        ).rowcount)
+
+    def help(self, guild_id: int, user_id: int, *, now: float | None = None,
+             message_id: int | None = None) -> HelpInfo | None:
+        """Read experience without creating a participant or advancing timing/counts."""
+        positive_id(guild_id)
+        positive_id(user_id)
+        now = timestamp(now)
+        with self._transaction():
+            if not self._observe_message(message_id, now):
+                return None
+            row = self._db.execute(
+                "SELECT count FROM relationships WHERE guild_id=? AND user_id=?", (guild_id, user_id)
+            ).fetchone()
+            return HelpInfo(guild_id, user_id, row[0] if row else 0)
+
+    def ping(self, guild_id: int, user_id: int, *, now: float | None = None, message_id: int | None = None,
+             response_event: str | None = None) -> Reply | None:
         """Count and choose, or return None for a known message ID; delivery is separate."""
         positive_id(guild_id)
         positive_id(user_id)
         now = timestamp(now)
-        if message_id is not None:
-            positive_id(message_id)
+        if response_event not in (None, "help_extra"):
+            raise ValueError("Unknown explicit response event")
         with self._transaction():
-            if message_id is not None:
-                self._db.execute("DELETE FROM seen_messages WHERE observed_at < ?", (now - DEDUPE_SECONDS,))
-                inserted = self._db.execute(
-                    "INSERT OR IGNORE INTO seen_messages(message_id, observed_at) VALUES (?, ?)",
-                    (message_id, now),
-                ).rowcount
-                if not inserted:
-                    return None
+            if not self._observe_message(message_id, now):
+                return None
             row = self._db.execute(
                 "SELECT count, last_phrase_id, last_ping_at, recent_phrase_ids FROM relationships WHERE guild_id=? AND user_id=?",
                 (guild_id, user_id),
@@ -133,6 +163,8 @@ class Game:
             elapsed = max(0, now - row[2]) if row and row[2] is not None else None
             context = Context(participants == 0, row is None, other_users, elapsed)
             event_id = self.phrases.event_for(context, guild_id, user_id, count)
+            if response_event and any(pool.id == response_event for pool in self.phrases.events):
+                event_id = response_event
             recent = tuple(json.loads(row[3])) if row else ()
             tier, phrase = self.phrases.select(guild_id, user_id, count, last_id, recent_phrase_ids=recent)
             if event_id:
@@ -146,7 +178,7 @@ class Game:
         text = phrase.text.format(count=count, others=other_users)
         return Reply(guild_id, user_id, count, tier.id, phrase.id, text, event_id, other_users)
 
-    def claim_response(self, reply: Reply, channel_id: int, *, now: float | None = None,
+    def claim_response(self, reply: Reply | HelpInfo, channel_id: int, *, now: float | None = None,
                        user_cooldown: float = 5, channel_cooldown: float = 2) -> bool:
         """Atomically reserve a response attempt. Failed attempts also consume cooldown."""
         positive_id(channel_id)
@@ -154,22 +186,22 @@ class Game:
         for value in (user_cooldown, channel_cooldown):
             timestamp(value)  # Validate finite nonnegative durations as well.
         with self._transaction():
+            self._db.execute("DELETE FROM user_state WHERE last_attempt_at < ?", (now - max(user_cooldown, 86400),))
             user = self._db.execute(
-                "SELECT last_attempt_at FROM relationships WHERE guild_id=? AND user_id=?",
+                "SELECT last_attempt_at FROM user_state WHERE guild_id=? AND user_id=?",
                 (reply.guild_id, reply.user_id),
             ).fetchone()
-            if user is None:
-                return False
             self._db.execute("DELETE FROM channel_state WHERE last_attempt_at < ?", (now - max(channel_cooldown, 86400),))
             channel = self._db.execute(
                 "SELECT last_attempt_at FROM channel_state WHERE guild_id=? AND channel_id=?",
                 (reply.guild_id, channel_id),
             ).fetchone()
-            if (user[0] is not None and now < user[0] + user_cooldown) or (channel and now < channel[0] + channel_cooldown):
+            if (user and now < user[0] + user_cooldown) or (channel and now < channel[0] + channel_cooldown):
                 return False
             self._db.execute(
-                "UPDATE relationships SET last_attempt_at=? WHERE guild_id=? AND user_id=?",
-                (now, reply.guild_id, reply.user_id),
+                """INSERT INTO user_state(guild_id, user_id, last_attempt_at) VALUES (?, ?, ?)
+                   ON CONFLICT(guild_id, user_id) DO UPDATE SET last_attempt_at=excluded.last_attempt_at""",
+                (reply.guild_id, reply.user_id, now),
             )
             self._db.execute(
                 """INSERT INTO channel_state(guild_id, channel_id, last_attempt_at) VALUES (?, ?, ?)

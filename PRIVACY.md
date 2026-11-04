@@ -1,15 +1,19 @@
 # Data and privacy
 
-Just Don't remembers its own interactions. It does not inspect ordinary message
-content or request Discord's privileged Message Content, Members, or Presences
-intents. Guild message events still reach the application; messages without a
-direct mention are immediately ignored.
+Just Don't remembers its own interactions. It examines the text of direct
+human mentions to distinguish exact help requests, extra-help wording, and game
+pings. It does not request Discord's privileged Message Content, Members, or
+Presences intents. Other guild message events still reach the application;
+messages without a direct mention are immediately ignored without inspecting
+content. Mention text is not stored.
 
 For a qualifying human mention in an ordinary guild text channel, the bot stores:
 
 - Guild and user IDs, interaction count, and last observed ping timestamp.
-- Last response-attempt time, last delivered phrase ID, count at delivery,
-  and up to five recently delivered phrase IDs for repetition avoidance.
+- Last delivered phrase ID, count at delivery, and up to five recently
+  delivered phrase IDs for repetition avoidance.
+- Guild/user IDs and last response-attempt time for shared help/game pacing,
+  including help-only users. Exact help requests do not create participants.
 - Guild/channel IDs and the last channel response-attempt time for pacing.
 - Message IDs and observation timestamps for a bounded replay window.
 
@@ -26,8 +30,8 @@ guild does not automatically delete its stored relationships.
 
 Replay IDs are retained for a 24-hour observation window and pruned when another
 qualifying mention is processed. Idle databases can therefore retain expired
-rows until activity resumes. Channel pacing records older than one day, or the
-configured channel cooldown if longer, are pruned on subsequent response claims.
+rows until activity resumes. User/channel pacing records older than one day, or the respective configured
+cooldown if longer, are pruned on subsequent response claims.
 
 ## Access and deletion
 
@@ -43,10 +47,12 @@ import sqlite3
 
 with closing(sqlite3.connect(".nuhuh/bot.sqlite3")) as db, db:
     db.execute("DELETE FROM relationships WHERE user_id = ?", (USER_ID,))
+    db.execute("DELETE FROM user_state WHERE user_id = ?", (USER_ID,))
 ```
 
 Replace `USER_ID` with the person's numeric Discord ID. To remove a guild's data,
-delete its rows from `relationships` and `channel_state` using `guild_id = ?`.
+delete its rows from `relationships`, `user_state`, and `channel_state` using
+`guild_id = ?`.
 Replay rows contain no user/guild mapping; they expire through the window above
 or can be cleared as a whole. Apply the same deletion to any retained backups.
 Deleting a relationship makes the next interaction a first encounter again.

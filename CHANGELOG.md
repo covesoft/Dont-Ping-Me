@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.0 — 2026-11-04
+
+- Added exact mention help: friendly before a user's first ping in a guild,
+  snarkier afterwards. Help does not count or change game timing/participants.
+- Extra wording after the help keyword counts as play and selects a new pool
+  of 12 lines, ahead of normal context events. Existing phrase edits are retained.
+- Help shares persistent pacing, replay protection, and in-flight send limits
+  with game replies. Embeds fall back to plain text if Embed Links is unavailable.
+- Added matching `/help` behavior to the dependency-free CLI.
+- Moved user response-attempt state to a separate table, using fresh schema 4.
+  Older alpha databases need a reset; no migration code is included.
+- Message text is inspected only after the direct-mention filter, without a
+  privileged intent, to distinguish help from play. No message text is stored.
+
 ## 0.3.0 — 2026-11-04
 
 Rapid play previously selected recent-ping replies on every eligible interaction,
