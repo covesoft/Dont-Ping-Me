@@ -297,7 +297,7 @@
         },
         {
           "id": "resignation.006",
-          "text": "I wonder what I would sound like if anyone took the advice."
+          "text": "I wonder what I would sound like if anyone took my advice."
         },
         {
           "id": "resignation.007",
@@ -428,7 +428,7 @@
     "first_guild_ping": [
       {
         "id": "event.first_guild_ping.001",
-        "text": "A new server. A fresh start. And you have already done it."
+        "text": "A new server. A fresh start. And you have already gone and done it."
       },
       {
         "id": "event.first_guild_ping.002",
