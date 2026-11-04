@@ -1,15 +1,27 @@
 """Transport-independent counting, selection, and delivery acknowledgement.
 
-Each ping() call represents one qualifying interaction. A Discord adapter must
-filter/deduplicate gateway events and apply cooldowns before sending a reply.
+Each ping() call represents one qualifying interaction. Adapters filter events,
+supply optional message IDs for replay protection, and claim cooldown reservations
+before sending. Offline play skips response pacing.
 """
 
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
+import math
 import sqlite3
+import time
 
-from .phrases import MAX_COUNT, PhraseBook
+from .phrases import Context, MAX_COUNT, PhraseBook
+
+DEDUPE_SECONDS = 86400
+
+
+def timestamp(value: float | None) -> float:
+    value = time.time() if value is None else value
+    if type(value) not in (int, float) or not math.isfinite(value) or value < 0:
+        raise ValueError("Time must be a finite, nonnegative Unix timestamp")
+    return float(value)
 
 
 def positive_id(value: int) -> int:
@@ -26,6 +38,8 @@ class Reply:
     tier_id: str
     phrase_id: str
     text: str
+    event_id: str | None = None
+    other_users: int = 0
 
 
 class Game:
@@ -41,7 +55,7 @@ class Game:
         try:
             with self._transaction():
                 version = self._db.execute("PRAGMA user_version").fetchone()[0]
-                if version not in (0, 1):
+                if version not in (0, 1, 2):
                     raise ValueError(f"Unsupported database schema version {version}")
                 self._db.execute("""
                     CREATE TABLE IF NOT EXISTS relationships (
@@ -53,7 +67,18 @@ class Game:
                         PRIMARY KEY (guild_id, user_id)
                     )
                 """)
-                self._db.execute("PRAGMA user_version = 1")
+                if version < 2:
+                    self._db.execute("ALTER TABLE relationships ADD COLUMN last_ping_at REAL")
+                    self._db.execute("ALTER TABLE relationships ADD COLUMN last_attempt_at REAL")
+                self._db.execute("""CREATE TABLE IF NOT EXISTS seen_messages (
+                    message_id INTEGER PRIMARY KEY, observed_at REAL NOT NULL
+                )""")
+                self._db.execute("CREATE INDEX IF NOT EXISTS seen_age ON seen_messages(observed_at)")
+                self._db.execute("""CREATE TABLE IF NOT EXISTS channel_state (
+                    guild_id INTEGER NOT NULL, channel_id INTEGER NOT NULL,
+                    last_attempt_at REAL NOT NULL, PRIMARY KEY(guild_id, channel_id)
+                )""")
+                self._db.execute("PRAGMA user_version = 2")
         except BaseException:
             self._db.close()
             raise
@@ -65,28 +90,83 @@ class Game:
             yield
             self._db.execute("COMMIT")
         except BaseException:
-            self._db.execute("ROLLBACK")
+            if self._db.in_transaction:
+                self._db.execute("ROLLBACK")
             raise
 
-    def ping(self, guild_id: int, user_id: int) -> Reply:
-        """Count and choose a reply; this does not claim it was delivered."""
+    def ping(self, guild_id: int, user_id: int, *, now: float | None = None, message_id: int | None = None) -> Reply | None:
+        """Count and choose, or return None for a known message ID; delivery is separate."""
         positive_id(guild_id)
         positive_id(user_id)
+        now = timestamp(now)
+        if message_id is not None:
+            positive_id(message_id)
         with self._transaction():
+            if message_id is not None:
+                self._db.execute("DELETE FROM seen_messages WHERE observed_at < ?", (now - DEDUPE_SECONDS,))
+                inserted = self._db.execute(
+                    "INSERT OR IGNORE INTO seen_messages(message_id, observed_at) VALUES (?, ?)",
+                    (message_id, now),
+                ).rowcount
+                if not inserted:
+                    return None
             row = self._db.execute(
-                "SELECT count, last_phrase_id FROM relationships WHERE guild_id=? AND user_id=?",
+                "SELECT count, last_phrase_id, last_ping_at FROM relationships WHERE guild_id=? AND user_id=?",
                 (guild_id, user_id),
             ).fetchone()
             count, last_id = (row[0] + 1, row[1]) if row else (1, None)
             if count > MAX_COUNT:
                 raise ValueError("This relationship has reached the maximum supported count")
+            participants = self._db.execute(
+                "SELECT COUNT(*) FROM relationships WHERE guild_id=?", (guild_id,)
+            ).fetchone()[0]
+            other_users = participants - int(row is not None)
+            elapsed = max(0, now - row[2]) if row and row[2] is not None else None
+            context = Context(participants == 0, row is None, other_users, elapsed)
+            event_id = self.phrases.event_for(context)
             tier, phrase = self.phrases.select(guild_id, user_id, count, last_id)
+            if event_id:
+                phrase = self.phrases.select_event(event_id, guild_id, user_id, count, last_id)
+            last_ping_at = max(now, row[2]) if row and row[2] is not None else now
             self._db.execute(
-                """INSERT INTO relationships (guild_id, user_id, count) VALUES (?, ?, ?)
-                   ON CONFLICT (guild_id, user_id) DO UPDATE SET count=excluded.count""",
-                (guild_id, user_id, count),
+                """INSERT INTO relationships (guild_id, user_id, count, last_ping_at) VALUES (?, ?, ?, ?)
+                   ON CONFLICT (guild_id, user_id) DO UPDATE SET count=excluded.count, last_ping_at=excluded.last_ping_at""",
+                (guild_id, user_id, count, last_ping_at),
             )
-        return Reply(guild_id, user_id, count, tier.id, phrase.id, phrase.text.format(count=count))
+        text = phrase.text.format(count=count, others=other_users)
+        return Reply(guild_id, user_id, count, tier.id, phrase.id, text, event_id, other_users)
+
+    def claim_response(self, reply: Reply, channel_id: int, *, now: float | None = None,
+                       user_cooldown: float = 5, channel_cooldown: float = 2) -> bool:
+        """Atomically reserve a response attempt. Failed attempts also consume cooldown."""
+        positive_id(channel_id)
+        now = timestamp(now)
+        for value in (user_cooldown, channel_cooldown):
+            timestamp(value)  # Validate finite nonnegative durations as well.
+        with self._transaction():
+            user = self._db.execute(
+                "SELECT last_attempt_at FROM relationships WHERE guild_id=? AND user_id=?",
+                (reply.guild_id, reply.user_id),
+            ).fetchone()
+            if user is None:
+                return False
+            self._db.execute("DELETE FROM channel_state WHERE last_attempt_at < ?", (now - max(channel_cooldown, 86400),))
+            channel = self._db.execute(
+                "SELECT last_attempt_at FROM channel_state WHERE guild_id=? AND channel_id=?",
+                (reply.guild_id, channel_id),
+            ).fetchone()
+            if (user[0] is not None and now < user[0] + user_cooldown) or (channel and now < channel[0] + channel_cooldown):
+                return False
+            self._db.execute(
+                "UPDATE relationships SET last_attempt_at=? WHERE guild_id=? AND user_id=?",
+                (now, reply.guild_id, reply.user_id),
+            )
+            self._db.execute(
+                """INSERT INTO channel_state(guild_id, channel_id, last_attempt_at) VALUES (?, ?, ?)
+                   ON CONFLICT(guild_id, channel_id) DO UPDATE SET last_attempt_at=excluded.last_attempt_at""",
+                (reply.guild_id, channel_id, now),
+            )
+            return True
 
     def delivered(self, reply: Reply) -> None:
         """Record only successful sends; older acknowledgements cannot overwrite newer ones."""

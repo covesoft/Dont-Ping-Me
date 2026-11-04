@@ -1,0 +1,2 @@
+# Discord mode only. Offline play needs no third-party packages.
+discord.py==2.7.1

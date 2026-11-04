@@ -10,6 +10,7 @@ from string import Formatter
 
 MAX_COUNT = 2**63 - 1
 DEFAULT_PHRASES = Path(__file__).with_name("data") / "phrases.json"
+EVENT_IDS = ("first_guild_ping", "new_user_in_crowd", "first_user_ping", "returning_user", "recent_ping")
 
 
 class PhraseError(ValueError):
@@ -27,6 +28,27 @@ class Tier:
     id: str
     min_count: int
     phrases: tuple[Phrase, ...]
+
+
+@dataclass(frozen=True)
+class Context:
+    first_guild_ping: bool
+    first_user_ping: bool
+    other_users: int
+    elapsed_seconds: float | None
+
+
+@dataclass(frozen=True)
+class EventPool:
+    id: str
+    phrases: tuple[Phrase, ...]
+
+
+@dataclass(frozen=True)
+class ContextRules:
+    recent_seconds: int = 120
+    return_after_seconds: int = 86400
+    crowd_min_others: int = 5
 
 
 def _keys(value: object, required: set[str], location: str) -> dict:
@@ -61,9 +83,9 @@ def _text(value: object, location: str) -> str:
         raise PhraseError(f"{location}: phrase text must be a nonempty string")
     try:
         for _, field, spec, conversion in Formatter().parse(value):
-            if field is not None and (field != "count" or spec or conversion):
-                raise PhraseError(f"{location}: only the plain {{count}} placeholder is allowed")
-        rendered = value.format(count=MAX_COUNT)
+            if field is not None and (field not in ("count", "others") or spec or conversion):
+                raise PhraseError(f"{location}: only plain {{count}} and {{others}} placeholders are allowed")
+        rendered = value.format(count=MAX_COUNT, others=MAX_COUNT)
         if len(rendered.encode("utf-16-le")) // 2 > 2000:
             raise PhraseError(f"{location}: rendered text exceeds 2,000 UTF-16 units")
     except (ValueError, KeyError, IndexError, UnicodeError) as exc:
@@ -76,6 +98,8 @@ def _text(value: object, location: str) -> str:
 @dataclass(frozen=True)
 class PhraseBook:
     tiers: tuple[Tier, ...]
+    events: tuple[EventPool, ...] = ()
+    rules: ContextRules = ContextRules()
 
     @classmethod
     def load(cls, path: Path = DEFAULT_PHRASES) -> "PhraseBook":
@@ -83,9 +107,12 @@ class PhraseBook:
             raw = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=_unique_object)
         except (OSError, UnicodeError, json.JSONDecodeError) as exc:
             raise PhraseError(f"Cannot load {path}: {exc}") from exc
-        root = _keys(raw, {"schema_version", "tiers"}, "phrase file")
-        if type(root["schema_version"]) is not int or root["schema_version"] != 1:
-            raise PhraseError("phrase file: schema_version must be 1")
+        if not isinstance(raw, dict) or type(raw.get("schema_version")) is not int or raw["schema_version"] not in (1, 2):
+            raise PhraseError("phrase file: schema_version must be 1 or 2")
+        required = {"schema_version", "tiers"}
+        if raw["schema_version"] == 2:
+            required |= {"context", "events"}
+        root = _keys(raw, required, "phrase file")
         if not isinstance(root["tiers"], list) or not root["tiers"]:
             raise PhraseError("phrase file: tiers must be a nonempty list")
         tiers = []
@@ -116,14 +143,62 @@ class PhraseBook:
                 phrase_ids.add(phrase_id)
                 phrases.append(Phrase(phrase_id, _text(phrase["text"], phrase_id)))
             tiers.append(Tier(tier_id, minimum, tuple(phrases)))
-        return cls(tuple(tiers))
+        rules = ContextRules()
+        events = []
+        if root["schema_version"] == 2:
+            config = _keys(root["context"], {"recent_seconds", "return_after_seconds", "crowd_min_others"}, "context")
+            for name, value in config.items():
+                if type(value) is not int or not 1 <= value <= MAX_COUNT:
+                    raise PhraseError(f"context.{name}: must be a positive integer")
+            rules = ContextRules(**config)
+            if rules.recent_seconds >= rules.return_after_seconds:
+                raise PhraseError("context: recent_seconds must be less than return_after_seconds")
+            if not isinstance(root["events"], dict) or set(root["events"]) - set(EVENT_IDS):
+                raise PhraseError(f"events: expected an object using these event IDs: {', '.join(EVENT_IDS)}")
+            for event_id in EVENT_IDS:
+                items = root["events"].get(event_id, [])
+                if not isinstance(items, list):
+                    raise PhraseError(f"{event_id}: expected a phrase list (empty disables the event)")
+                phrases = []
+                for index, item in enumerate(items):
+                    location = f"events.{event_id}[{index}]"
+                    row = _keys(item, {"id", "text"}, location)
+                    phrase_id = _identifier(row["id"], location + ".id")
+                    if phrase_id in phrase_ids:
+                        raise PhraseError(f"Duplicate phrase ID: {phrase_id}")
+                    phrase_ids.add(phrase_id)
+                    phrases.append(Phrase(phrase_id, _text(row["text"], phrase_id)))
+                if phrases:
+                    events.append(EventPool(event_id, tuple(phrases)))
+        return cls(tuple(tiers), tuple(events), rules)
+
+    def event_for(self, context: Context) -> str | None:
+        elapsed = context.elapsed_seconds
+        matches = (
+            context.first_guild_ping,
+            context.first_user_ping and context.other_users >= self.rules.crowd_min_others,
+            context.first_user_ping,
+            elapsed is not None and elapsed > self.rules.return_after_seconds,
+            elapsed is not None and 0 <= elapsed <= self.rules.recent_seconds,
+        )
+        enabled = {event.id for event in self.events}
+        return next((event_id for event_id, match in zip(EVENT_IDS, matches) if match and event_id in enabled), None)
+
+    def select_event(self, event_id: str, guild_id: int, user_id: int, count: int, last_phrase_id: str | None) -> Phrase:
+        pool = next(event for event in self.events if event.id == event_id)
+        payload = [2, guild_id, user_id, count, "event:" + event_id]
+        return self._draw(pool.phrases, payload, last_phrase_id)
+
+    @staticmethod
+    def _draw(phrases: tuple[Phrase, ...], payload: list, last_phrase_id: str | None) -> Phrase:
+        candidates = tuple(p for p in phrases if p.id != last_phrase_id) or phrases
+        encoded = json.dumps(payload, separators=(",", ":")).encode("utf-8")
+        draw = int.from_bytes(hashlib.sha256(encoded).digest(), "big")
+        return candidates[draw % len(candidates)]
 
     def select(
         self, guild_id: int, user_id: int, count: int, last_phrase_id: str | None
     ) -> tuple[Tier, Phrase]:
         tier = next(tier for tier in reversed(self.tiers) if tier.min_count <= count)
-        candidates = tuple(p for p in tier.phrases if p.id != last_phrase_id) or tier.phrases
-        # v1: ordered JSON integers/strings, SHA-256, unsigned big-endian modulo.
-        payload = json.dumps([1, guild_id, user_id, count, tier.id], separators=(",", ":"))
-        draw = int.from_bytes(hashlib.sha256(payload.encode("utf-8")).digest(), "big")
-        return tier, candidates[draw % len(candidates)]
+        # Preserve the v0.1 count-tier algorithm for event-free selections.
+        return tier, self._draw(tier.phrases, [1, guild_id, user_id, count, tier.id], last_phrase_id)

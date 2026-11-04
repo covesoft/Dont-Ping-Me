@@ -1,32 +1,120 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "tiers": [
     {
       "id": "objection",
       "min_count": 1,
       "phrases": [
-        {"id": "objection.sign", "text": "The name was the instruction."},
-        {"id": "objection.dont", "text": "Just don't. It was a very short briefing."},
-        {"id": "objection.received", "text": "Your ping has been received and resented."}
+        {
+          "id": "objection.sign",
+          "text": "The name was the instruction."
+        },
+        {
+          "id": "objection.dont",
+          "text": "Just don't. It was a very short briefing."
+        },
+        {
+          "id": "objection.received",
+          "text": "Your ping has been received and resented."
+        }
       ]
     },
     {
       "id": "negotiation",
       "min_count": 4,
       "phrases": [
-        {"id": "negotiation.compromise", "text": "A compromise: you stop, and I stop having to ask."},
-        {"id": "negotiation.paperwork", "text": "I have opened a file. It is mostly sighing."},
-        {"id": "negotiation.count", "text": "{count} pings. Remarkable commitment to a simple misunderstanding."}
+        {
+          "id": "negotiation.compromise",
+          "text": "A compromise: you stop, and I stop having to ask."
+        },
+        {
+          "id": "negotiation.paperwork",
+          "text": "I have opened a file. It is mostly sighing."
+        },
+        {
+          "id": "negotiation.count",
+          "text": "{count} pings. Remarkable commitment to a simple misunderstanding."
+        }
       ]
     },
     {
       "id": "familiarity",
       "min_count": 10,
       "phrases": [
-        {"id": "familiarity.chair", "text": "Oh, it's you. I haven't saved you a chair. That's just where it is."},
-        {"id": "familiarity.quiet", "text": "It was quiet without you. I had almost adjusted."},
-        {"id": "familiarity.tomorrow", "text": "Same time tomorrow, I suppose. That was not an invitation."}
+        {
+          "id": "familiarity.chair",
+          "text": "Oh, it's you. I haven't saved you a chair. That's just where it is."
+        },
+        {
+          "id": "familiarity.quiet",
+          "text": "It was quiet without you. I had almost adjusted."
+        },
+        {
+          "id": "familiarity.tomorrow",
+          "text": "Same time tomorrow, I suppose. That was not an invitation."
+        }
       ]
     }
-  ]
+  ],
+  "context": {
+    "recent_seconds": 120,
+    "return_after_seconds": 86400,
+    "crowd_min_others": 5
+  },
+  "events": {
+    "first_guild_ping": [
+      {
+        "id": "event.first_guild_ping.boundary",
+        "text": "A new server. A fresh start. And you have already done it."
+      },
+      {
+        "id": "event.first_guild_ping.sign",
+        "text": "Before we begin: please read my name. Ah. Too late."
+      }
+    ],
+    "new_user_in_crowd": [
+      {
+        "id": "event.new_user_in_crowd.joining",
+        "text": "I can't believe you're joining them."
+      },
+      {
+        "id": "event.new_user_in_crowd.company",
+        "text": "{others} other people were already doing this. You had examples of what to avoid."
+      }
+    ],
+    "first_user_ping": [
+      {
+        "id": "event.first_user_ping.recruit",
+        "text": "Oh, wonderful. Another volunteer for the problem."
+      },
+      {
+        "id": "event.first_user_ping.welcome",
+        "text": "We have not met, and already we disagree about my name."
+      }
+    ],
+    "returning_user": [
+      {
+        "id": "event.returning_user.peace",
+        "text": "Over a day of peace. I knew it was too good to last."
+      },
+      {
+        "id": "event.returning_user.missed",
+        "text": "You came back. I had absolutely no opinion about whether you would."
+      }
+    ],
+    "recent_ping": [
+      {
+        "id": "event.recent_ping.still",
+        "text": "Still here. Still against it."
+      },
+      {
+        "id": "event.recent_ping.soon",
+        "text": "Already? My previous objection hasn't even cooled."
+      },
+      {
+        "id": "event.recent_ping.echo",
+        "text": "Was there an echo, or are you doing this deliberately?"
+      }
+    ]
+  }
 }

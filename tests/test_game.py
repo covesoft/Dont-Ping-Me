@@ -18,7 +18,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class GameTests(unittest.TestCase):
     def setUp(self):
-        self.book = PhraseBook.load()
+        # These legacy tests deliberately isolate ordinary count-tier behavior.
+        self.book = PhraseBook(PhraseBook.load().tiers)
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.database = Path(self.temp.name) / "game.sqlite3"
@@ -193,6 +194,18 @@ class CLITests(unittest.TestCase):
                 result = self.run_cli(*options, "--pings", "1") if "--pings" not in options else self.run_cli(*options)
                 self.assertEqual(result.returncode, 2)
                 self.assertNotIn("Traceback", result.stderr)
+
+    def test_context_demo_and_wait_command_need_no_real_waiting(self):
+        demo = self.run_cli("--demo")
+        self.assertEqual(demo.returncode, 0, demo.stderr)
+        for event in ("first_guild_ping", "recent_ping", "returning_user", "first_user_ping", "new_user_in_crowd"):
+            self.assertIn("[" + event + "]", demo.stdout)
+        interactive = self.run_cli("--db", ":memory:", "--debug", input="\n/wait 86401\n\n/quit\n")
+        self.assertEqual(interactive.returncode, 0, interactive.stderr)
+        self.assertIn("[returning_user]", interactive.stdout)
+        tiers = self.run_cli("--db", ":memory:", "--pings", "15", "--step-seconds", "180", "--debug")
+        self.assertEqual(tiers.returncode, 0, tiers.stderr)
+        self.assertIn("[15 / familiarity]", tiers.stdout)
 
 
 if __name__ == "__main__":

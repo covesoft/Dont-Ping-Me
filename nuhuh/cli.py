@@ -3,9 +3,10 @@
 import argparse
 from pathlib import Path
 import sqlite3
+import time
 
 from . import __version__
-from .engine import Game, positive_id
+from .engine import Game, positive_id, timestamp
 from .phrases import DEFAULT_PHRASES, PhraseBook
 
 
@@ -26,6 +27,37 @@ def _pings(text: str) -> int:
     return value
 
 
+def _seconds(text: str) -> float:
+    try:
+        value = timestamp(float(text))
+        if value > 3652500000:
+            raise ValueError("Use a duration of at most 100 years")
+        return value
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
+
+
+def demonstrate(phrases):
+    """Exercise actual engine events with a virtual clock and several identities."""
+    scenarios = [
+        (1, 1000000, "First ping in a guild"),
+        (1, 1000030, "Same user, thirty seconds later"),
+        (1, 1086431, "Same user, over a day later"),
+        (2, 1086600, "A second participant"),
+        (3, 1086800, "A third participant"),
+        (4, 1087000, "A fourth participant"),
+        (5, 1087200, "A fifth participant"),
+        (6, 1087400, "A newcomer joins five existing participants"),
+        (1, 1087600, "Ordinary tier reply after the recent window"),
+    ]
+    with Game(phrases) as game:
+        for user_id, now, label in scenarios:
+            reply = game.ping(1, user_id, now=now)
+            print(f"{label} [{reply.event_id or reply.tier_id}]")
+            print(reply.text, flush=True)
+            game.delivered(reply)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Just Don't — an offline demo of nuhuh.")
     parser.add_argument("--version", action="version", version=f"nuhuh {__version__}")
@@ -33,27 +65,39 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--user-id", type=_id, default=1, help="simulated user (default: 1)")
     parser.add_argument("--db", default=".nuhuh/demo.sqlite3", help="database path, or :memory: for a fresh run")
     parser.add_argument("--phrases", type=Path, default=DEFAULT_PHRASES, help="custom phrase JSON file")
-    parser.add_argument("--pings", type=_pings, help="print N replies and exit instead of playing interactively")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--pings", type=_pings, help="print N replies and exit instead of playing interactively")
+    mode.add_argument("--demo", action="store_true", help="show all event types with a disposable database and simulated time")
+    parser.add_argument("--step-seconds", type=_seconds, default=0, help="advance simulated time after each ping (default: 0)")
     parser.add_argument("--debug", action="store_true", help="show count and tier beside each reply")
     args = parser.parse_args(argv)
     try:
         phrases = PhraseBook.load(args.phrases)
+        if args.demo:
+            demonstrate(phrases)
+            return 0
         if args.db != ":memory:":
             Path(args.db).expanduser().parent.mkdir(parents=True, exist_ok=True)
         database = str(Path(args.db).expanduser()) if args.db != ":memory:" else args.db
         with Game(phrases, database) as game:
+            offset = 0
+
             def ping() -> None:
-                reply = game.ping(args.guild_id, args.user_id)
+                nonlocal offset
+                reply = game.ping(args.guild_id, args.user_id, now=time.time() + offset)
                 prefix = f"[{reply.count} / {reply.tier_id}] " if args.debug else ""
+                if args.debug and reply.event_id:
+                    prefix += f"[{reply.event_id}] "
                 print(prefix + reply.text, flush=True)
                 game.delivered(reply)
+                offset += args.step_seconds
 
             if args.pings is not None:
                 for _ in range(args.pings):
                     ping()
                 return 0
             print("Just Don't — offline demo")
-            print(f"Guild {args.guild_id}, user {args.user_id}. Enter to ping; /quit to leave.")
+            print(f"Guild {args.guild_id}, user {args.user_id}. Enter to ping; /wait SECONDS; /quit to leave.")
             while True:
                 try:
                     command = input("> ").strip()
@@ -62,8 +106,17 @@ def main(argv: list[str] | None = None) -> int:
                     break
                 if command.casefold() in ("/quit", "quit", "exit"):
                     break
+                if command.casefold().startswith("/wait "):
+                    try:
+                        seconds = _seconds(command[6:].strip())
+                    except argparse.ArgumentTypeError as exc:
+                        print(str(exc))
+                        continue
+                    offset += seconds
+                    print(f"Clock advanced by {seconds:g} seconds.")
+                    continue
                 if command:
-                    print("Press Enter to ping, or type /quit.")
+                    print("Press Enter to ping, use /wait SECONDS, or type /quit.")
                     continue
                 ping()
     except KeyboardInterrupt:
