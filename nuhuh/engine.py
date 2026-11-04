@@ -13,7 +13,8 @@ import json
 import sqlite3
 import time
 
-from .phrases import Context, MAX_COUNT, PhraseBook
+from .phrases import Context, MAX_COUNT, MEMORY_EVENTS, PhraseBook
+from .signals import Signals
 
 DEDUPE_SECONDS = 86400
 HISTORY_LIMIT = 5
@@ -42,6 +43,7 @@ class Reply:
     text: str
     event_id: str | None = None
     other_users: int = 0
+    memory_origin_count: int | None = None
 
 
 @dataclass(frozen=True)
@@ -67,7 +69,7 @@ class Game:
                 tables = self._db.execute(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
                 ).fetchall()
-                if version not in (0, 4) or (version == 0 and tables):
+                if version not in (0, 5) or (version == 0 and tables):
                     raise ValueError(
                         f"Unsupported alpha database schema {version} at {database}. "
                         "Stop the program, delete this database and its matching sidecars, then restart. "
@@ -97,7 +99,13 @@ class Game:
                     guild_id INTEGER NOT NULL, channel_id INTEGER NOT NULL,
                     last_attempt_at REAL NOT NULL, PRIMARY KEY(guild_id, channel_id)
                 )""")
-                self._db.execute("PRAGMA user_version = 4")
+                self._db.execute("""CREATE TABLE IF NOT EXISTS memories (
+                    guild_id INTEGER NOT NULL, user_id INTEGER NOT NULL,
+                    kind TEXT NOT NULL, setup_count INTEGER NOT NULL,
+                    PRIMARY KEY(guild_id, user_id, kind)
+                )""")
+                self._db.execute("CREATE INDEX IF NOT EXISTS recent_participants ON relationships(guild_id, last_ping_at)")
+                self._db.execute("PRAGMA user_version = 5")
         except BaseException:
             self._db.close()
             raise
@@ -139,7 +147,7 @@ class Game:
             return HelpInfo(guild_id, user_id, row[0] if row else 0)
 
     def ping(self, guild_id: int, user_id: int, *, now: float | None = None, message_id: int | None = None,
-             response_event: str | None = None) -> Reply | None:
+             response_event: str | None = None, signals: Signals = Signals()) -> Reply | None:
         """Count and choose, or return None for a known message ID; delivery is separate."""
         positive_id(guild_id)
         positive_id(user_id)
@@ -162,9 +170,20 @@ class Game:
             other_users = participants - int(row is not None)
             elapsed = max(0, now - row[2]) if row and row[2] is not None else None
             context = Context(participants == 0, row is None, other_users, elapsed)
-            event_id = self.phrases.event_for(context, guild_id, user_id, count)
+            memories = dict(self._db.execute(
+                "SELECT kind, setup_count FROM memories WHERE guild_id=? AND user_id=?",
+                (guild_id, user_id),
+            ).fetchall())
+            active_others = self._db.execute(
+                """SELECT COUNT(*) FROM relationships WHERE guild_id=? AND user_id!=?
+                   AND last_ping_at>=? AND last_ping_at<=?""",
+                (guild_id, user_id, max(0, now - self.phrases.surprises.group_window_seconds), now),
+            ).fetchone()[0]
+            event_id, memory_origin = self.phrases.encounter_for(
+                context, signals, memories, active_others, guild_id, user_id, count)
             if response_event and any(pool.id == response_event for pool in self.phrases.events):
                 event_id = response_event
+                memory_origin = None
             recent = tuple(json.loads(row[3])) if row else ()
             tier, phrase = self.phrases.select(guild_id, user_id, count, last_id, recent_phrase_ids=recent)
             if event_id:
@@ -176,7 +195,7 @@ class Game:
                 (guild_id, user_id, count, last_ping_at),
             )
         text = phrase.text.format(count=count, others=other_users)
-        return Reply(guild_id, user_id, count, tier.id, phrase.id, text, event_id, other_users)
+        return Reply(guild_id, user_id, count, tier.id, phrase.id, text, event_id, other_users, memory_origin)
 
     def claim_response(self, reply: Reply | HelpInfo, channel_id: int, *, now: float | None = None,
                        user_cooldown: float = 5, channel_cooldown: float = 2) -> bool:
@@ -226,6 +245,19 @@ class Game:
                    WHERE guild_id=? AND user_id=?""",
                 (reply.phrase_id, reply.count, json.dumps(recent), reply.guild_id, reply.user_id),
             )
+            if reply.event_id in MEMORY_EVENTS:
+                self._db.execute(
+                    """INSERT INTO memories(guild_id, user_id, kind, setup_count) VALUES (?, ?, ?, ?)
+                       ON CONFLICT(guild_id, user_id, kind) DO UPDATE SET setup_count=excluded.setup_count
+                       WHERE excluded.setup_count > memories.setup_count""",
+                    (reply.guild_id, reply.user_id, reply.event_id, reply.count),
+                )
+            elif reply.memory_origin_count is not None:
+                kind = next((kind for kind, event in MEMORY_EVENTS.items() if event == reply.event_id), None)
+                self._db.execute(
+                    "DELETE FROM memories WHERE guild_id=? AND user_id=? AND kind=? AND setup_count=?",
+                    (reply.guild_id, reply.user_id, kind, reply.memory_origin_count),
+                )
 
     def close(self) -> None:
         self._db.close()

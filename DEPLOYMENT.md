@@ -16,7 +16,7 @@ sudo -u nuhuh /opt/nuhuh/.venv/bin/python -m pip install -r /opt/nuhuh/requireme
 sudoedit /etc/nuhuh.env
 ```
 
-Use the revision containing v0.4.0; the new files must be pushed to your
+Use the revision containing v0.5.0; the new files must be pushed to your
 repository before a fresh clone can receive them. In `/etc/nuhuh.env`, put:
 
 ```text

@@ -7,11 +7,20 @@ from pathlib import Path
 import re
 from string import Formatter
 
+from .signals import Signals
+
 
 MAX_COUNT = 2**63 - 1
 DEFAULT_PHRASES = Path(__file__).with_name("data") / "phrases.json"
 CONTEXT_EVENT_IDS = ("first_guild_ping", "new_user_in_crowd", "first_user_ping", "returning_user", "recent_ping")
-EVENT_IDS = CONTEXT_EVENT_IDS + ("help_extra",)
+MESSAGE_EVENT_IDS = ("large_text", "emoji", "repeated_mentions", "apology", "bargaining", "group_incident")
+MEMORY_EVENTS = {
+    "large_text": "shorter_this_time",
+    "emoji": "emoji_callback",
+    "repeated_mentions": "single_knock",
+    "apology": "broken_promise",
+}
+EVENT_IDS = CONTEXT_EVENT_IDS + ("help_extra",) + MESSAGE_EVENT_IDS + tuple(MEMORY_EVENTS.values()) + ("milestone", "rare_admission")
 
 
 class PhraseError(ValueError):
@@ -53,11 +62,24 @@ class ContextRules:
     recent_one_in: int = 3
 
 
-def _keys(value: object, required: set[str], location: str) -> dict:
+@dataclass(frozen=True)
+class SurpriseRules:
+    large_text_chars: int = 350
+    message_one_in: int = 3
+    callback_one_in: int = 12
+    rare_one_in: int = 80
+    rare_min_count: int = 151
+    group_window_seconds: int = 60
+    group_min_others: int = 3
+    milestones: tuple[int, ...] = (10, 25, 50, 100, 250, 500, 1000)
+    milestone_every: int = 1000
+
+
+def _keys(value: object, required: set[str], location: str, optional: set[str] = frozenset()) -> dict:
     if not isinstance(value, dict):
         raise PhraseError(f"{location}: expected an object")
     missing = required - value.keys()
-    extra = value.keys() - required
+    extra = value.keys() - required - optional
     if missing or extra:
         raise PhraseError(
             f"{location}: missing fields {sorted(missing)}; unknown fields {sorted(extra)}"
@@ -102,6 +124,7 @@ class PhraseBook:
     tiers: tuple[Tier, ...]
     events: tuple[EventPool, ...] = ()
     rules: ContextRules = ContextRules()
+    surprises: SurpriseRules = SurpriseRules()
 
     @classmethod
     def load(cls, path: Path = DEFAULT_PHRASES) -> "PhraseBook":
@@ -112,7 +135,7 @@ class PhraseBook:
         if not isinstance(raw, dict) or type(raw.get("schema_version")) is not int or raw["schema_version"] != 3:
             raise PhraseError("phrase file: schema_version must be 3")
         required = {"schema_version", "tiers", "context", "events"}
-        root = _keys(raw, required, "phrase file")
+        root = _keys(raw, required, "phrase file", {"surprises"})
         if not isinstance(root["tiers"], list) or not root["tiers"]:
             raise PhraseError("phrase file: tiers must be a nonempty list")
         tiers = []
@@ -168,7 +191,62 @@ class PhraseBook:
                 phrases.append(Phrase(phrase_id, _text(row["text"], phrase_id)))
             if phrases:
                 events.append(EventPool(event_id, tuple(phrases)))
-        return cls(tuple(tiers), tuple(events), rules)
+        config = _keys(root.get("surprises", {}), set(), "surprises", set(SurpriseRules.__dataclass_fields__))
+        settings = dict(config)
+        for name, value in settings.items():
+            if name == "milestones":
+                if (not isinstance(value, list)
+                        or any(type(n) is not int or not 2 <= n <= MAX_COUNT for n in value)
+                        or value != sorted(set(value))):
+                    raise PhraseError("surprises.milestones: use a strictly increasing list of integers >= 2")
+                settings[name] = tuple(value)
+            elif type(value) is not int or not (0 if name == "milestone_every" else 1) <= value <= MAX_COUNT:
+                raise PhraseError(f"surprises.{name}: must be {'a nonnegative' if name == 'milestone_every' else 'a positive'} integer")
+        return cls(tuple(tiers), tuple(events), rules, SurpriseRules(**settings))
+
+    def encounter_for(self, context: Context, signals: Signals, memories: dict[str, int],
+                      active_others: int, guild_id: int, user_id: int, count: int) -> tuple[str | None, int | None]:
+        """Choose one event, preserving first contact/returns and ordinary tiers.
+
+        The optional origin count identifies the exact remembered setup to
+        consume on delivery; merely selecting a callback never consumes it.
+        """
+        ordinary = self.event_for(context, guild_id, user_id, count)
+        if ordinary not in (None, "recent_ping"):
+            return ordinary, None
+        enabled = {pool.id for pool in self.events}
+        rules = self.surprises
+        every = rules.milestone_every
+        if "milestone" in enabled and (count in rules.milestones or (
+                every and count >= max(every, max(rules.milestones, default=0)) and count % every == 0)):
+            return "milestone", None
+        # An acknowledged apology is betrayed by the next non-apology play.
+        if not signals.apology and "apology" in memories and "broken_promise" in enabled:
+            return "broken_promise", memories["apology"]
+
+        matches = (signals.characters >= rules.large_text_chars, signals.emoji,
+                   signals.mentions > 1, signals.apology, signals.bargaining,
+                   active_others >= rules.group_min_others)
+        candidates = [name for name, match in zip(MESSAGE_EVENT_IDS, matches) if match and name in enabled]
+        def draw(label, options):
+            return options[self._number([4, guild_id, user_id, count, label]) % len(options)]
+        if candidates and self._number([4, guild_id, user_id, count, "message_gate"]) % rules.message_one_in == 0:
+            return draw("message_choice", candidates), None
+
+        # Recall only the absence of a previously acknowledged habit. Do not
+        # make a "shorter" joke on another long message or betray an apology
+        # while the player is apologizing again.
+        absent = {"large_text": signals.characters < rules.large_text_chars,
+                  "emoji": not signals.emoji, "repeated_mentions": signals.mentions <= 1}
+        callbacks = [kind for kind, matches in absent.items()
+                     if matches and kind in memories and MEMORY_EVENTS[kind] in enabled]
+        if callbacks and self._number([4, guild_id, user_id, count, "callback_gate"]) % rules.callback_one_in == 0:
+            kind = draw("callback_choice", callbacks)
+            return MEMORY_EVENTS[kind], memories[kind]
+        if ("rare_admission" in enabled and count >= rules.rare_min_count
+                and self._number([4, guild_id, user_id, count, "rare_gate"]) % rules.rare_one_in == 0):
+            return "rare_admission", None
+        return ordinary, None
 
     def event_for(self, context: Context, guild_id: int, user_id: int, count: int) -> str | None:
         elapsed = context.elapsed_seconds

@@ -6,6 +6,7 @@ from discord.ext import commands
 from config import USER_REPLY_COOLDOWN_SECONDS, CHANNEL_REPLY_COOLDOWN_SECONDS, SEND_TIMEOUT_SECONDS
 from nuhuh.responder import Responder
 from nuhuh.helptext import HELP_COLOR, help_text, mention_kind
+from nuhuh.signals import message_signals
 
 
 class Pings(commands.Cog):
@@ -32,7 +33,8 @@ class Pings(commands.Cog):
         me = message.guild.me
         permissions = message.channel.permissions_for(me) if me is not None else None
         can_send = bool(permissions and permissions.view_channel and permissions.send_messages)
-        kind = mention_kind(message.content, self.bot.user.id)
+        content = message.content
+        kind = mention_kind(content, self.bot.user.id)
 
         # Handle the help command, if present. This is a special case because it has a different
         # response format and is not part of the game itself.
@@ -62,7 +64,7 @@ class Pings(commands.Cog):
         options = {"response_event": "help_extra"} if kind == "help_extra" else {}
         await self.responder.handle(
             message.guild.id, message.author.id, message.channel.id, message.id,
-            can_send=can_send, send=send, **options,
+            can_send=can_send, send=send, signals=message_signals(content, self.bot.user.id), **options,
         )
 
     async def cog_unload(self):

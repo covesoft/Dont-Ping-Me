@@ -7,8 +7,9 @@ import time
 
 from . import __version__
 from .engine import Game, positive_id, timestamp
-from .phrases import DEFAULT_PHRASES, PhraseBook
+from .phrases import DEFAULT_PHRASES, MESSAGE_EVENT_IDS, MEMORY_EVENTS, PhraseBook
 from .helptext import help_text, mention_kind
+from .signals import message_signals
 
 
 def _id(text: str) -> int:
@@ -69,6 +70,24 @@ def tour(phrases, guild_id, user_id):
         print(phrase.text.format(count=tier.min_count, others=0), flush=True)
 
 
+def encounter_tour(phrases, guild_id, user_id):
+    """Preview special copy, explicitly bypassing triggers and chance gates."""
+    print("Encounter copy preview — triggers/chances bypassed; no saved data changed.")
+    special = MESSAGE_EVENT_IDS + tuple(MEMORY_EVENTS.values()) + ("milestone", "rare_admission")
+    for pool in phrases.events:
+        if pool.id not in special:
+            continue
+        if pool.id == "milestone":
+            count = next(iter(phrases.surprises.milestones), phrases.surprises.milestone_every or 10)
+        elif pool.id == "rare_admission":
+            count = phrases.surprises.rare_min_count
+        else:
+            count = 6
+        phrase = phrases.select_event(pool.id, guild_id, user_id, count, None)
+        print(f"[{pool.id}]")
+        print(phrase.text.format(count=count, others=phrases.surprises.group_min_others), flush=True)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Just Don't — an offline demo of nuhuh.")
     parser.add_argument("--version", action="version", version=f"nuhuh {__version__}")
@@ -80,11 +99,18 @@ def main(argv: list[str] | None = None) -> int:
     mode.add_argument("--pings", type=_pings, help="print N replies and exit instead of playing interactively")
     mode.add_argument("--demo", action="store_true", help="show context events and recent/tier mixing in a disposable game")
     mode.add_argument("--tour", action="store_true", help="preview every count tier without changing saved data")
+    mode.add_argument("--encounters", action="store_true", help="preview special-reaction copy without triggers, waiting, or saved data")
     parser.add_argument("--step-seconds", type=_seconds, default=0, help="advance simulated time after each ping (default: 0)")
     parser.add_argument("--debug", action="store_true", help="show count and tier beside each reply")
+    parser.add_argument("--message", default="", help="simulated message text for --pings (no real Discord mention needed)")
     args = parser.parse_args(argv)
+    if args.message and args.pings is None:
+        parser.error("--message requires --pings; type messages directly during interactive play")
     try:
         phrases = PhraseBook.load(args.phrases)
+        if args.encounters:
+            encounter_tour(phrases, args.guild_id, args.user_id)
+            return 0
         if args.tour:
             tour(phrases, args.guild_id, args.user_id)
             return 0
@@ -97,10 +123,10 @@ def main(argv: list[str] | None = None) -> int:
         with Game(phrases, database) as game:
             offset = 0
 
-            def ping(response_event=None) -> None:
+            def ping(response_event=None, content="") -> None:
                 nonlocal offset
                 reply = game.ping(args.guild_id, args.user_id, now=time.time() + offset,
-                                  response_event=response_event)
+                                  response_event=response_event, signals=message_signals(content, 1))
                 prefix = f"[{reply.count} / {reply.tier_id}] " if args.debug else ""
                 if args.debug and reply.event_id:
                     prefix += f"[{reply.event_id}] "
@@ -110,13 +136,14 @@ def main(argv: list[str] | None = None) -> int:
 
             if args.pings is not None:
                 for _ in range(args.pings):
-                    ping()
+                    ping(content=args.message)
                 return 0
             print("Just Don't — offline demo")
-            print(f"Guild {args.guild_id}, user {args.user_id}. Enter to ping; /help; /wait SECONDS; /quit to leave.")
+            print(f"Guild {args.guild_id}, user {args.user_id}. Enter to ping, or type a message; /help; /wait SECONDS; /quit to leave.")
             while True:
                 try:
-                    command = input("> ").strip()
+                    typed = input("> ")
+                    command = typed.strip()
                 except EOFError:
                     print()
                     break
@@ -129,7 +156,7 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"{title}\n\n{description}\n\n{footer}")
                     continue
                 if kind == "help_extra":
-                    ping(response_event="help_extra")
+                    ping(response_event="help_extra", content=command[1:])
                     continue
                 if command.casefold().startswith("/wait "):
                     try:
@@ -140,10 +167,10 @@ def main(argv: list[str] | None = None) -> int:
                     offset += seconds
                     print(f"Clock advanced by {seconds:g} seconds.")
                     continue
-                if command:
-                    print("Press Enter to ping, use /help or /wait SECONDS, or type /quit.")
+                if command.startswith("/"):
+                    print("Enter or type a message to ping; /help; /wait SECONDS; /quit.")
                     continue
-                ping()
+                ping(content=typed)
     except KeyboardInterrupt:
         print()
         return 0

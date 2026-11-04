@@ -107,6 +107,16 @@ class DiscordTests(unittest.IsolatedAsyncioTestCase):
         cog.responder.handle_help.assert_not_awaited()
         self.assertEqual(cog.responder.handle.await_args.kwargs["response_event"], "help_extra")
 
+    async def test_qualified_message_cues_are_forwarded_without_changing_message_count(self):
+        cog, message = self.cog(), self.fake_message()
+        message.text = "<@99> <@!99> 😀 " + "a" * 350
+        await cog.on_message(message)
+        cog.responder.handle.assert_awaited_once()
+        signals = cog.responder.handle.await_args.kwargs["signals"]
+        self.assertEqual(signals.mentions, 2)
+        self.assertTrue(signals.emoji)
+        self.assertEqual(signals.characters, len(message.text))
+
     async def test_help_falls_back_to_plain_text_without_embed_permission(self):
         for count, footer in [
             (0, "You don't have to play. I'm fine with that!"),

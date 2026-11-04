@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.5.0 — 2026-11-04
+
+- Added occasional reactions to 350-character messages, Unicode/custom emoji,
+  repeated literal mentions, and whole short apologies/bargaining expressions.
+- Added four delivery-aware memory tags per guild/user for one-use callbacks;
+  an accepted apology makes a later non-apology ping eligible for its aftermath.
+  Failed/suppressed replies do not establish or consume memories.
+- Added group-incident reactions based on distinct recent pingers, exact-count
+  milestones, and rare admissions after the final tier begins. All share the
+  existing cooldowns and deterministic selector; no delayed replies are queued.
+- Appended 96 phrases, preserving all 147 texts/IDs from public base `9d17c69`.
+  Optional `surprises` settings extend phrase schema 3 without invalidating
+  existing custom files. Missing/empty event pools disable their responses.
+- CLI now accepts typed messages, batch `--message`, and a spoiler-aware
+  `--encounters` copy preview. Offline play still needs only Python's standard library.
+- Bundled Unicode 17 property ranges and attribution for emoji detection;
+  no new dependency, runtime network call, or privileged intent is introduced.
+- Fresh database schema 5 adds bounded memories. Older alpha databases need
+  a reset while stopped; no migration code is carried forward.
+
 ## 0.4.1 — 2026-11-04
 
 - Help copy now returns a history-aware footer alongside its title and

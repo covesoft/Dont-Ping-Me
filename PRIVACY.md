@@ -1,8 +1,9 @@
 # Data and privacy
 
 Just Don't remembers its own interactions. It examines the text of direct
-human mentions to distinguish exact help requests, extra-help wording, and game
-pings. It does not request Discord's privileged Message Content, Members, or
+human mentions to distinguish help requests and extract game cues: message length,
+emoji, repeated mentions, and a few whole short apology/bargaining expressions.
+It does not request Discord's privileged Message Content, Members, or
 Presences intents. Other guild message events still reach the application;
 messages without a direct mention are immediately ignored without inspecting
 content. Mention text is not stored.
@@ -16,6 +17,10 @@ For a qualifying human mention in an ordinary guild text channel, the bot stores
   including help-only users. Exact help requests do not create participants.
 - Guild/channel IDs and the last channel response-attempt time for pacing.
 - Message IDs and observation timestamps for a bounded replay window.
+- Up to four guild/user memory tags (`large_text`, `emoji`, `repeated_mentions`,
+  `apology`) and their setup interaction counts, established only after the
+  corresponding response is delivered. A delivered callback consumes its tag;
+  a later delivered setup may renew it. No message excerpt is retained.
 
 It does not store message bodies, attachments, usernames, guild names, or a
 member roster. Other participants are counted from the bot's own interaction
@@ -27,6 +32,10 @@ Operational logs may contain guild/channel IDs and error information.
 
 Relationships persist until an operator deletes them. Removing the bot from a
 guild does not automatically delete its stored relationships.
+Memory tags persist until consumed or deleted; they are never shared across
+guilds or users. Group-incident selection counts distinct other participants'
+existing ping timestamps within a configurable 60-second window. It creates no
+separate activity log, roster, or ordinary-message history.
 
 Replay IDs are retained for a 24-hour observation window and pruned when another
 qualifying mention is processed. Idle databases can therefore retain expired
@@ -48,10 +57,11 @@ import sqlite3
 with closing(sqlite3.connect(".nuhuh/bot.sqlite3")) as db, db:
     db.execute("DELETE FROM relationships WHERE user_id = ?", (USER_ID,))
     db.execute("DELETE FROM user_state WHERE user_id = ?", (USER_ID,))
+    db.execute("DELETE FROM memories WHERE user_id = ?", (USER_ID,))
 ```
 
 Replace `USER_ID` with the person's numeric Discord ID. To remove a guild's data,
-delete its rows from `relationships`, `user_state`, and `channel_state` using
+delete its rows from `relationships`, `user_state`, `channel_state`, and `memories` using
 `guild_id = ?`.
 Replay rows contain no user/guild mapping; they expire through the window above
 or can be cleared as a whole. Apply the same deletion to any retained backups.

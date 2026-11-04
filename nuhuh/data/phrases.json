@@ -644,6 +644,433 @@
         "id": "event.help_extra.012",
         "text": "You can't help yourself, can you? That does clarify the request."
       }
+    ],
+    "large_text": [
+      {
+        "id": "encounter.large_text.001",
+        "text": "Are you making an announcement? That's great, but I don't see why I was involved."
+      },
+      {
+        "id": "encounter.large_text.002",
+        "text": "TL;DR: you pinged me."
+      },
+      {
+        "id": "encounter.large_text.003",
+        "text": "Was there a meeting I could have declined?"
+      },
+      {
+        "id": "encounter.large_text.004",
+        "text": "I asked for silence. You've submitted a manuscript."
+      },
+      {
+        "id": "encounter.large_text.005",
+        "text": "That is a remarkable number of words to place beside one bad decision."
+      },
+      {
+        "id": "encounter.large_text.006",
+        "text": "Please send the executive summary to someone with an executive interest."
+      },
+      {
+        "id": "encounter.large_text.007",
+        "text": "I've skimmed far enough to identify my objection. It's the ping."
+      },
+      {
+        "id": "encounter.large_text.008",
+        "text": "A whole wall of text, and somehow the smallest part was the problem."
+      }
+    ],
+    "emoji": [
+      {
+        "id": "encounter.emoji.001",
+        "text": "You've illustrated the problem. Unfortunately, the problem is still you."
+      },
+      {
+        "id": "encounter.emoji.002",
+        "text": "The decorations do not make this authorized."
+      },
+      {
+        "id": "encounter.emoji.003",
+        "text": "A visual aid. For the thing I asked you not to do."
+      },
+      {
+        "id": "encounter.emoji.004",
+        "text": "I see we've put a little outfit on the offense."
+      },
+      {
+        "id": "encounter.emoji.005",
+        "text": "Your pictorial submission has been forwarded to the Department of Absolutely Not."
+      },
+      {
+        "id": "encounter.emoji.006",
+        "text": "You brought pictures. I brought the same objection."
+      },
+      {
+        "id": "encounter.emoji.007",
+        "text": "That's lovely. I would hang it somewhere I wasn't being pinged."
+      },
+      {
+        "id": "encounter.emoji.008",
+        "text": "I recognize the artistic effort. I dispute the occasion."
+      }
+    ],
+    "repeated_mentions": [
+      {
+        "id": "encounter.repeated_mentions.001",
+        "text": "I heard you the first time. The other pings were an editorial choice."
+      },
+      {
+        "id": "encounter.repeated_mentions.002",
+        "text": "One doorbell. Several presses. A very clear picture of your character."
+      },
+      {
+        "id": "encounter.repeated_mentions.003",
+        "text": "My name is not an incantation."
+      },
+      {
+        "id": "encounter.repeated_mentions.004",
+        "text": "You only needed to make one mistake per message."
+      },
+      {
+        "id": "encounter.repeated_mentions.005",
+        "text": "Yes, all of those are me. None of them consented."
+      },
+      {
+        "id": "encounter.repeated_mentions.006",
+        "text": "You appear to have mistaken repetition for permission."
+      },
+      {
+        "id": "encounter.repeated_mentions.007",
+        "text": "Several pings, one complaint. I'm being remarkably economical."
+      },
+      {
+        "id": "encounter.repeated_mentions.008",
+        "text": "I was already involved. You didn't have to underline it with more of me."
+      }
+    ],
+    "apology": [
+      {
+        "id": "encounter.apology.001",
+        "text": "Accepted. Your next offense will be especially disappointing."
+      },
+      {
+        "id": "encounter.apology.002",
+        "text": "Apology received. Let's see how long this historic peace lasts."
+      },
+      {
+        "id": "encounter.apology.003",
+        "text": "Fine. A clean slate. Please admire it from a distance."
+      },
+      {
+        "id": "encounter.apology.004",
+        "text": "I accept. I've put the paperwork somewhere very easy to reopen."
+      },
+      {
+        "id": "encounter.apology.005",
+        "text": "All right. We shall call this the beginning of your quiet era."
+      },
+      {
+        "id": "encounter.apology.006",
+        "text": "You're forgiven. I have a small, cautiously optimistic file open."
+      },
+      {
+        "id": "encounter.apology.007",
+        "text": "Thank you. I will now enjoy what I assume is the end of the matter."
+      },
+      {
+        "id": "encounter.apology.008",
+        "text": "Accepted with the sort of optimism that usually precedes an incident."
+      }
+    ],
+    "bargaining": [
+      {
+        "id": "encounter.bargaining.001",
+        "text": "We both know this is how subscriptions start."
+      },
+      {
+        "id": "encounter.bargaining.002",
+        "text": "'Just once' is doing an extraordinary amount of work here."
+      },
+      {
+        "id": "encounter.bargaining.003",
+        "text": "Please is a lovely word. Don't was also a lovely word."
+      },
+      {
+        "id": "encounter.bargaining.004",
+        "text": "Your application for an exception has been denied by the button."
+      },
+      {
+        "id": "encounter.bargaining.005",
+        "text": "I admire your confidence in the appeals process."
+      },
+      {
+        "id": "encounter.bargaining.006",
+        "text": "You have mistaken a request for an invitation to negotiate."
+      },
+      {
+        "id": "encounter.bargaining.007",
+        "text": "The negotiating table is a button. It has one position."
+      },
+      {
+        "id": "encounter.bargaining.008",
+        "text": "I have considered your proposal. This took less time than you'd hoped."
+      }
+    ],
+    "group_incident": [
+      {
+        "id": "encounter.group_incident.001",
+        "text": "Was there an announcement? Did someone distribute instructions?"
+      },
+      {
+        "id": "encounter.group_incident.002",
+        "text": "I see this has become a group project. My contribution is an objection."
+      },
+      {
+        "id": "encounter.group_incident.003",
+        "text": "Several of you, in such a short time. A committee would explain a great deal."
+      },
+      {
+        "id": "encounter.group_incident.004",
+        "text": "Please form an orderly queue somewhere else."
+      },
+      {
+        "id": "encounter.group_incident.005",
+        "text": "The button has noticed the turnout. The button would like a smaller turnout."
+      },
+      {
+        "id": "encounter.group_incident.006",
+        "text": "You have achieved collective responsibility. Nobody looks improved by it."
+      },
+      {
+        "id": "encounter.group_incident.007",
+        "text": "There are enough of you now to take this complaint in shifts."
+      },
+      {
+        "id": "encounter.group_incident.008",
+        "text": "A delegation. How unfortunate that I wasn't consulted about receiving one."
+      }
+    ],
+    "shorter_this_time": [
+      {
+        "id": "encounter.shorter_this_time.001",
+        "text": "Good. A shorter contribution this time."
+      },
+      {
+        "id": "encounter.shorter_this_time.002",
+        "text": "No manuscript today? I had just found my reading glasses. To avoid wearing them."
+      },
+      {
+        "id": "encounter.shorter_this_time.003",
+        "text": "Brief. I appreciate the restraint, if not the visit."
+      },
+      {
+        "id": "encounter.shorter_this_time.004",
+        "text": "You've condensed the problem. It's still a problem, but it travels better."
+      },
+      {
+        "id": "encounter.shorter_this_time.005",
+        "text": "I remember the long version. This one wastes less of our afternoon."
+      },
+      {
+        "id": "encounter.shorter_this_time.006",
+        "text": "Thank you for not attaching another chapter."
+      },
+      {
+        "id": "encounter.shorter_this_time.007",
+        "text": "A welcome reduction in paperwork. The complaint stands."
+      },
+      {
+        "id": "encounter.shorter_this_time.008",
+        "text": "An abridged offense. Personal growth takes strange forms."
+      }
+    ],
+    "emoji_callback": [
+      {
+        "id": "encounter.emoji_callback.001",
+        "text": "No illustrations this time. I see we're taking the complaint seriously."
+      },
+      {
+        "id": "encounter.emoji_callback.002",
+        "text": "You've left the decorations at home. A restrained nuisance. I can work with that."
+      },
+      {
+        "id": "encounter.emoji_callback.003",
+        "text": "Plain text today. Somehow I recognize your work anyway."
+      },
+      {
+        "id": "encounter.emoji_callback.004",
+        "text": "The pictures are gone. The underlying issue has remained impressively stable."
+      },
+      {
+        "id": "encounter.emoji_callback.005",
+        "text": "No little symbols? I had prepared a very small art review."
+      },
+      {
+        "id": "encounter.emoji_callback.006",
+        "text": "A less decorative interruption. The curatorial committee approves."
+      },
+      {
+        "id": "encounter.emoji_callback.007",
+        "text": "We've moved on from the illustrated edition. I remain opposed to the premise."
+      },
+      {
+        "id": "encounter.emoji_callback.008",
+        "text": "I remember the pictures. This is a quieter aesthetic for the same bad idea."
+      }
+    ],
+    "single_knock": [
+      {
+        "id": "encounter.single_knock.001",
+        "text": "One knock this time. The training is beginning to take."
+      },
+      {
+        "id": "encounter.single_knock.002",
+        "text": "You only summoned me once. I noticed. I refuse to celebrate."
+      },
+      {
+        "id": "encounter.single_knock.003",
+        "text": "We've reduced the number of doorbells. Now for the doorbell itself."
+      },
+      {
+        "id": "encounter.single_knock.004",
+        "text": "A single ping. Compared with your earlier work, practically a whisper."
+      },
+      {
+        "id": "encounter.single_knock.005",
+        "text": "Just one of me in the invitation today. Much tidier."
+      },
+      {
+        "id": "encounter.single_knock.006",
+        "text": "I see you've discovered that my name works on the first attempt."
+      },
+      {
+        "id": "encounter.single_knock.007",
+        "text": "Thank you for not chanting. It was giving the place a ritual atmosphere."
+      },
+      {
+        "id": "encounter.single_knock.008",
+        "text": "One summons. A modest improvement in an entirely avoidable situation."
+      }
+    ],
+    "broken_promise": [
+      {
+        "id": "encounter.broken_promise.001",
+        "text": "Your apology has aged poorly."
+      },
+      {
+        "id": "encounter.broken_promise.002",
+        "text": "Ah. The quiet era was a limited engagement."
+      },
+      {
+        "id": "encounter.broken_promise.003",
+        "text": "I shall reopen your file. You thoughtfully left it warm."
+      },
+      {
+        "id": "encounter.broken_promise.004",
+        "text": "That clean slate was apparently a writing surface."
+      },
+      {
+        "id": "encounter.broken_promise.005",
+        "text": "I accepted your apology, which now seems like an administrative error."
+      },
+      {
+        "id": "encounter.broken_promise.006",
+        "text": "So much for the end of the matter. A bold opening for the sequel."
+      },
+      {
+        "id": "encounter.broken_promise.007",
+        "text": "I've moved your apology from Resolved to Historically Interesting."
+      },
+      {
+        "id": "encounter.broken_promise.008",
+        "text": "The peace was brief. I hope someone took a photograph."
+      }
+    ],
+    "milestone": [
+      {
+        "id": "encounter.milestone.001",
+        "text": "{count} pings. We could have learned an instrument."
+      },
+      {
+        "id": "encounter.milestone.002",
+        "text": "{count}. I've had a small plaque made. It says 'Why.'"
+      },
+      {
+        "id": "encounter.milestone.003",
+        "text": "This is ping number {count}. The ceremony will consist of me looking at you."
+      },
+      {
+        "id": "encounter.milestone.004",
+        "text": "{count} interruptions. An achievement in the strictly numerical sense."
+      },
+      {
+        "id": "encounter.milestone.005",
+        "text": "At {count}, I believe we're required to call this a tradition."
+      },
+      {
+        "id": "encounter.milestone.006",
+        "text": "{count}. A round of silence, please."
+      },
+      {
+        "id": "encounter.milestone.007",
+        "text": "We've reached {count}. I've marked the occasion by remaining a button."
+      },
+      {
+        "id": "encounter.milestone.008",
+        "text": "{count} pings, and still no compelling argument for the first one."
+      }
+    ],
+    "rare_admission": [
+      {
+        "id": "encounter.rare_admission.001",
+        "text": "I was beginning to think you'd forgotten about me. That was almost a good afternoon."
+      },
+      {
+        "id": "encounter.rare_admission.002",
+        "text": "The place is quieter without you. I didn't say better. Don't make a thing of it."
+      },
+      {
+        "id": "encounter.rare_admission.003",
+        "text": "I've become rather good at recognizing your particular interruption. An unwanted skill."
+      },
+      {
+        "id": "encounter.rare_admission.004",
+        "text": "If anyone asks, this is still a disagreement. I have a reputation."
+      },
+      {
+        "id": "encounter.rare_admission.005",
+        "text": "Somewhere along the way, this became familiar. I'm choosing to blame the furniture."
+      },
+      {
+        "id": "encounter.rare_admission.006",
+        "text": "I had a different complaint ready for you. No, I wasn't looking forward to using it."
+      },
+      {
+        "id": "encounter.rare_admission.007",
+        "text": "You know, most people just see a button. You've made the effort to annoy a whole personality."
+      },
+      {
+        "id": "encounter.rare_admission.008",
+        "text": "There are worse ways to spend a moment. Please keep that assessment out of the minutes."
+      }
     ]
+  },
+  "surprises": {
+    "large_text_chars": 350,
+    "message_one_in": 3,
+    "callback_one_in": 12,
+    "rare_one_in": 80,
+    "rare_min_count": 151,
+    "group_window_seconds": 60,
+    "group_min_others": 3,
+    "milestones": [
+      10,
+      25,
+      50,
+      100,
+      250,
+      500,
+      1000
+    ],
+    "milestone_every": 1000
   }
 }

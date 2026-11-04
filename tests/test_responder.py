@@ -9,6 +9,7 @@ import unittest
 from nuhuh.async_game import AsyncGame
 from nuhuh.phrases import PhraseBook
 from nuhuh.responder import Responder
+from nuhuh.signals import Signals
 
 
 class ResponderTests(unittest.IsolatedAsyncioTestCase):
@@ -143,3 +144,47 @@ class ResponderTests(unittest.IsolatedAsyncioTestCase):
         finally:
             release.set()
             await task
+
+
+class MemoryResponderTests(unittest.IsolatedAsyncioTestCase):
+    async def test_suppressed_setups_do_not_create_callbacks_and_failed_callbacks_remain(self):
+        base = PhraseBook.load()
+        book = replace(base, events=tuple(p for p in base.events if p.id in ("large_text", "shorter_this_time")),
+                       surprises=replace(base.surprises, message_one_in=1, callback_one_in=1))
+        game = await AsyncGame.open(book, ":memory:")
+        self.addAsyncCleanup(game.close)
+        now = [1000]
+        responder = Responder(game, clock=lambda: now[0])
+        self.addAsyncCleanup(responder.close)
+        sent = []
+
+        async def send(text):
+            sent.append(text)
+
+        async def handle(message, signals=Signals(), callback=send, can_send=True):
+            return await responder.handle(1, 1, 10, message, can_send=can_send, send=callback, signals=signals)
+
+        await handle(1)
+        now[0] = 1001
+        suppressed = await handle(2, Signals(350))
+        self.assertEqual((suppressed.status, suppressed.reply.event_id), ("suppressed", "large_text"))
+        now[0] = 1005
+        self.assertIsNone((await handle(3)).reply.event_id)
+        now[0] = 1010
+        denied = await handle(4, Signals(350), can_send=False)
+        self.assertEqual(denied.status, "no_permission")
+        self.assertIsNone((await handle(5)).reply.event_id)
+        now[0] = 1015
+        self.assertEqual((await handle(6, Signals(350))).status, "sent")
+
+        async def fail(text):
+            raise RuntimeError("simulated failure")
+
+        now[0] = 1020
+        with self.assertLogs("nuhuh.responder", level="WARNING"):
+            failed = await handle(7, callback=fail)
+        self.assertEqual((failed.status, failed.reply.event_id), ("send_failed", "shorter_this_time"))
+        now[0] = 1025
+        self.assertEqual((await handle(8)).reply.event_id, "shorter_this_time")
+        now[0] = 1030
+        self.assertIsNone((await handle(9)).reply.event_id)

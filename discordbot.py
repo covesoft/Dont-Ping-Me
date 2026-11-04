@@ -1,4 +1,4 @@
-"""Just Don't Discord bot. Run from this folder with: python bot.py"""
+"""Just Don't Discord bot. Run from this folder with: python discordbot.py"""
 
 import asyncio
 import logging
@@ -39,7 +39,7 @@ class NuhuhBot(commands.Bot):
         log.info("Logged in as %s (%s); connected to %s guilds", self.user, self.user.id, len(self.guilds))
 
     async def on_message(self, message):
-        # The cog filters mentions first and parses help only in those messages.
+        # The cog filters mentions before extracting help and game cues.
         # No process_commands() call: ordinary message content is not inspected.
         pass
 

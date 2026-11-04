@@ -233,6 +233,30 @@ class CLITests(unittest.TestCase):
         self.assertIn("[2 / objection] [help_extra]", result.stdout)
         self.assertNotIn("[3 /", result.stdout)
 
+    def test_interactive_messages_batch_text_and_encounter_preview(self):
+        with tempfile.TemporaryDirectory() as folder:
+            data = json.loads(DEFAULT_PHRASES.read_text(encoding="utf-8"))
+            data["events"] = {key: value for key, value in data["events"].items()
+                              if key in ("apology", "broken_promise", "emoji")}
+            data["surprises"]["message_one_in"] = 1
+            phrases = Path(folder) / "custom.json"
+            phrases.write_text(json.dumps(data))
+            interactive = self.run_cli("--phrases", str(phrases), "--db", ":memory:", "--debug",
+                                       input="sorry\n/help\nhello\n/quit\n")
+            self.assertEqual(interactive.returncode, 0, interactive.stderr)
+            self.assertIn("[1 / objection] [apology]", interactive.stdout)
+            self.assertIn("[2 / objection] [broken_promise]", interactive.stdout)
+            batch = self.run_cli("--phrases", str(phrases), "--db", ":memory:",
+                                 "--pings", "2", "--message", "😀", "--debug")
+            self.assertEqual(batch.returncode, 0, batch.stderr)
+            self.assertIn("[2 / objection] [emoji]", batch.stdout)
+            database = Path(folder) / "uncreated" / "demo.sqlite3"
+            preview = self.run_cli("--encounters", "--db", str(database))
+            self.assertEqual(preview.returncode, 0, preview.stderr)
+            self.assertIn("[shorter_this_time]", preview.stdout)
+            self.assertIn("[rare_admission]", preview.stdout)
+            self.assertFalse(database.parent.exists())
+
 
 if __name__ == "__main__":
     unittest.main()

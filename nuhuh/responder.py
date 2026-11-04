@@ -6,6 +6,7 @@ import logging
 import time
 
 from .engine import HelpInfo, Reply, timestamp
+from .signals import Signals
 
 log = logging.getLogger(__name__)
 
@@ -32,16 +33,17 @@ class Responder:
         self._tasks = set()
         self._closing = False
 
-    async def handle(self, guild_id, user_id, channel_id, message_id, *, can_send, send, response_event=None):
+    async def handle(self, guild_id, user_id, channel_id, message_id, *, can_send, send, response_event=None,
+                     signals=Signals()):
         return await self._handle(guild_id, user_id, channel_id, message_id,
-                                  can_send=can_send, send=send, response_event=response_event)
+                                  can_send=can_send, send=send, response_event=response_event, signals=signals)
 
     async def handle_help(self, guild_id, user_id, channel_id, message_id, *, can_send, send):
         return await self._handle(guild_id, user_id, channel_id, message_id,
                                   can_send=can_send, send=send, is_help=True)
 
     async def _handle(self, guild_id, user_id, channel_id, message_id, *, can_send, send,
-                      is_help=False, response_event=None):
+                      is_help=False, response_event=None, signals=Signals()):
         if self._closing:
             return Outcome("closing")
         task = asyncio.current_task()
@@ -51,7 +53,7 @@ class Responder:
                 reply = await self.game.help(guild_id, user_id, now=self.clock(), message_id=message_id)
             else:
                 reply = await self.game.ping(guild_id, user_id, now=self.clock(), message_id=message_id,
-                                             response_event=response_event)
+                                             response_event=response_event, signals=signals)
             if reply is None:
                 return Outcome("duplicate")
             if not can_send:
