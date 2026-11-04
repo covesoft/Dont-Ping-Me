@@ -7,10 +7,11 @@
 import discord
 from discord.ext import commands
 
-from config import USER_REPLY_COOLDOWN_SECONDS, CHANNEL_REPLY_COOLDOWN_SECONDS, SEND_TIMEOUT_SECONDS, SOURCE_URL
+from config import USER_REPLY_COOLDOWN_SECONDS, CHANNEL_REPLY_COOLDOWN_SECONDS, SEND_TIMEOUT_SECONDS, SOURCE_URL, OWNER_IDS
 from nuhuh.responder import Responder
 from nuhuh.helptext import HELP_COLOR, help_text, mention_kind
 from cogs.channels import PLAY_CHANNELS, can_send_message, channel_permissions
+from cogs.owner import owner_command, guild_pages, size_text
 from nuhuh.signals import message_signals
 from nuhuh.legal import legal_notice
 
@@ -40,6 +41,24 @@ class Pings(commands.Cog):
         permissions = channel_permissions(message.channel, me)
         can_send = can_send_message(message.channel, permissions)
         content = message.content
+        command = owner_command(content, self.bot.user.id) if message.author.id in OWNER_IDS else None
+        if command is not None:
+            async def send_report(_info):
+                if command == "guilds":
+                    pages = guild_pages(self.bot.guilds)
+                else:
+                    usage = await self.bot.game.statistics()
+                    pages = [size_text(usage, len(self.bot.guilds))]
+                for page in pages:
+                    await message.channel.send(page, allowed_mentions=discord.AllowedMentions.none())
+
+            # Reuse help's deduplication, pacing, timeout, and shutdown tracking.
+            # Owner reports never create or advance a game relationship.
+            await self.responder.handle_help(
+                message.guild.id, message.author.id, message.channel.id, message.id,
+                can_send=can_send, send=send_report,
+            )
+            return
         kind = mention_kind(content, self.bot.user.id)
 
         # Handle the help command, if present. This is a special case because it has a different

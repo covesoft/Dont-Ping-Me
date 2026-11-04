@@ -123,6 +123,41 @@ first ping.
 For offline play use `/help` and `/help me please`. The former shows the same
 friendly/refresher text without counting, and the latter counts as a ping.
 
+## Bot-owner oversight
+
+Set `OWNER_IDS` in `.env` to comma-separated Discord user IDs. `config.OWNER_IDS`
+is the resulting list of integers; an empty list disables owner commands. This
+means the bot's configured owners, regardless of server role or permissions.
+
+| Exact mentioned command | Owner response |
+| --- | --- |
+| `@Just Don't guilds` | Current connected guild names and cached member counts, alphabetically listed across messages as needed |
+| `@Just Don't size` | Total recorded pesters, recorded guilds/relationships, and max/p95/average/median/mode distributions |
+
+Choose the actual bot mention. Commands are case-insensitive and require just
+the mention plus the command; extra words go through normal gameplay. These
+commands are not added to public game help. They reply in the invoking channel,
+so the report is visible to people with access to that channel. Outgoing mention
+notifications remain disabled, and Embed Links is not required.
+
+An owner's exact report request does **not** add a pester or participant. Other
+users sending the same command still play normally, including count/cooldown
+behavior; server administrators have no special bypass unless listed in
+`OWNER_IDS`. Owners' ordinary pings still count. Reports share help/game replay
+protection, response cooldowns, timeout, permissions, and shutdown handling.
+
+`size` reads stored relationship counts, including guilds the bot has left and
+counts whose replies were suppressed or failed. It excludes exact help and owner
+reports. The two distributions are explicitly **per recorded guild** and **per
+guild/user relationship**; a person in two guilds has two relationships. p95
+uses nearest rank; mode is shown only when unique, and averages/medians use up
+to two decimals. An empty database shows a friendly zero-data report.
+
+Recorded guilds means guilds with at least one stored pester, not every guild
+ever joined. Zero-play installations are not tracked historically. Cached member
+counts may be unavailable or stale; no member roster is fetched, no privileged
+intent is added, and the database schema remains unchanged.
+
 ## Source access and license
 
 The first-party project is offered under **AGPL-3.0-only** from v0.5.2. See

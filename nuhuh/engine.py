@@ -19,6 +19,7 @@ import time
 
 from .phrases import Context, MAX_COUNT, MEMORY_EVENTS, PhraseBook
 from .signals import Signals
+from .statistics import UsageStatistics
 
 DEDUPE_SECONDS = 86400
 HISTORY_LIMIT = 5
@@ -262,6 +263,11 @@ class Game:
                     "DELETE FROM memories WHERE guild_id=? AND user_id=? AND kind=? AND setup_count=?",
                     (reply.guild_id, reply.user_id, kind, reply.memory_origin_count),
                 )
+
+    def statistics(self) -> UsageStatistics:
+        """One consistent read, including recorded guilds the bot has since left."""
+        rows = self._db.execute("SELECT guild_id, count FROM relationships").fetchall()
+        return UsageStatistics.from_rows(rows)
 
     def close(self) -> None:
         self._db.close()

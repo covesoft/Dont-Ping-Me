@@ -18,6 +18,8 @@ replace verification of a particular release or hosted installation.
 - [x] Setup guides, privacy notes, third-party notices, and a Linux service template.
 - [x] Thread/forum and voice/stage text routing with surface-appropriate send checks.
 - [x] Delayed join introductions with destination rules, duplicate guards, and cancellation.
+- [x] Exact owner-only guild/usage reports, non-counting routing, cached metadata,
+      bounded pagination, and tested statistics without a database schema change.
 
 ## Confirmed through live play
 
@@ -39,6 +41,8 @@ replace verification of a particular release or hosted installation.
 - [ ] Check long text, negotiation, group incidents, milestones, and rare replies live.
 - [ ] Check a remembered callback across a restart and apology aftermath.
 - [ ] Confirm ordinary messages and unsupported contexts remain silent.
+- [ ] Confirm owner `guilds`/`size` reports work live, other users still play
+      normally with those words, and owner ordinary pings still count.
 - [ ] Test mentions/help in a thread, forum post, and voice text chat, including
       denied thread posting and an invited private thread.
 - [ ] Test a new installation's delayed intro, system/bot-channel routing, and

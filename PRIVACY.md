@@ -25,9 +25,17 @@ threads, forum posts, and voice/stage text chat), the bot stores:
 
 It does not store message bodies, attachments, usernames, guild names, or a
 member roster. Other participants are counted from the bot's own interaction
-records. There is no global public list of guilds or players, no analytics
-service, and no generative-AI service used to produce replies at runtime.
+records. There is no publicly invocable global list of guilds or players, no
+analytics service, and no generative-AI service used to produce replies at runtime.
 Operational logs may contain guild/channel IDs and error information.
+
+Configured bot owners can request connected guild names/cached member counts
+or aggregate pester statistics through exact mention commands. Reports appear
+in the invoking channel and are visible to people with channel access. Guild
+names/member rosters are not stored for this feature. Statistics read existing
+counts, including retained relationships from guilds the bot has left; they do
+not create or advance participants. Owner requests use the existing bounded
+replay and response-attempt records. No lifetime installation log is added.
 
 On a new guild join, the bot may send one delayed introduction to the system
 channel or a clearly named bot channel. Routing uses channel metadata and send

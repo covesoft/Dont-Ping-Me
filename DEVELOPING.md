@@ -209,11 +209,13 @@ participant activity. The draws are pseudorandom probabilities, not schedules.
 | --- | --- |
 | `discordbot.py` / `config.py` | Startup, configuration, minimal intents, and shutdown |
 | `cogs/pings.py` | Filter events, route help, extract cues, and send replies |
+| `cogs/owner.py` | Exact owner command parser and bounded guild/usage report formatting |
 | `cogs/channels.py` | Supported guild channel types and thread-aware send checks |
 | `cogs/welcome.py` | One delayed introduction per actual join, with destination selection and cancellation |
 | `nuhuh/signals.py` | Extract small cues without retaining message text |
 | `nuhuh/responder.py` | Shared help/game pacing and in-flight send coordination |
 | `nuhuh/async_game.py` | Keep SQLite work on one dedicated worker thread |
+| `nuhuh/statistics.py` | Immutable aggregate/distribution snapshots from recorded relationship counts |
 | `nuhuh/engine.py` | Atomic counting, replay protection, state, and delivery acknowledgement |
 | `nuhuh/phrases.py` | Validate editable content and select deterministic replies |
 | `nuhuh/cli.py` | Run the same game offline |
@@ -271,6 +273,22 @@ is rendered separately by `nuhuh/legal.py`, preserving the persona's closing lin
 Offline help retains the full source/license information without importing
 Discord or dotenv. Discord help-rendering edits can stay confined to the adapter;
 they do not change the persona copy or CLI notices.
+
+## Owner reports
+
+Pings checks `config.OWNER_IDS` after the normal message filters and before
+help/game routing. Only exact leading-mention `guilds`/`size` requests bypass
+gameplay for owners. It uses `Responder.handle_help` for non-counting replay,
+cooldown, permission, timeout, and unload coordination; no additional listener
+can double-count the message. Owners otherwise use the normal game path.
+
+`Game.statistics()` performs one SELECT for a consistent snapshot without
+mutating any game tables. `AsyncGame.statistics()` runs it on the existing
+SQLite worker. Python integers aggregate guild totals without SQLite SUM's
+64-bit overflow; the summary exposes no raw guild/user IDs. Distributions use
+nearest-rank p95 and an explicitly unique mode. Current guild/member metadata
+comes from Discord's cache; historical coverage comes only from stored pesters.
+See [owner operations](OPERATING.md#bot-owner-oversight) for visibility and setup.
 
 ## Discord channels and introductions
 

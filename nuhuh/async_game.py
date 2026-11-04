@@ -60,6 +60,9 @@ class AsyncGame:
     async def delivered(self, reply):
         await self._call("delivered", reply)
 
+    async def statistics(self):
+        return await self._call("statistics")
+
     async def close(self):
         if self._close_task is None:
             self._closing = True

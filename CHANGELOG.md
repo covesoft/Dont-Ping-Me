@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.7.0 — 2026-11-04
+
+- Add exact `@bot guilds` and `@bot size` commands for configured `OWNER_IDS`.
+  Owners receive non-counting reports; everyone else follows normal gameplay.
+- List connected guild names and cached member counts with escaped formatting,
+  pagination, and outgoing mentions disabled; no member roster fetch or new intent.
+- Summarize total recorded pesters and per-guild/per-relationship max, nearest-rank
+  p95, average, median, and unique mode. Historical coverage explicitly means
+  guilds with recorded pesters, including retained data from departed guilds.
+- Run consistent read-only statistics on the existing SQLite worker and reuse
+  help's replay, cooldown, permission, timeout, and shutdown guards for reports.
+- Preserve phrase/help/intro copy and database schema 5; no reset required.
+
 ## 0.6.0 — 2026-11-04
 
 - Accept direct mentions in threads/forum posts and voice/stage text chat, with
