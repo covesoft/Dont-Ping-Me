@@ -343,7 +343,7 @@
       "phrases": [
         {
           "id": "familiarity.001",
-          "text": "Oh, it's you. I haven't saved you a chair. That's just where it is."
+          "text": "Oh, it's you. I didn't save you a chair. That's just where it is."
         },
         {
           "id": "familiarity.002",
@@ -500,11 +500,11 @@
       },
       {
         "id": "event.first_user_ping.002",
-        "text": "We have not met, and already we disagree about my name."
+        "text": "We have not met, and already we disagree what my name means."
       },
       {
         "id": "event.first_user_ping.003",
-        "text": "Your first ping here. I would have preferred a wave from a distance."
+        "text": "And.. you've pinged me. And we were doing so well."
       },
       {
         "id": "event.first_user_ping.004",
