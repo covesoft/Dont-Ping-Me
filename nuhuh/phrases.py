@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 covesoft and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See LICENSE and NOTICE.md for copyright and warranty information.
+
 """Validated, developer-editable phrase pools and stable selection."""
 
 from dataclasses import dataclass

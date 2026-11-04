@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 covesoft and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See LICENSE and NOTICE.md for copyright and warranty information.
+
 """Run the suite and fail if any SQLite connection is not explicitly closed.
 
 Retaining handles makes this independent of garbage-collection timing. This

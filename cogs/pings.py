@@ -1,12 +1,17 @@
+# SPDX-FileCopyrightText: 2026 covesoft and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See LICENSE and NOTICE.md for copyright and warranty information.
+
 """Only human direct mentions in ordinary guild text channels enter the game."""
 
 import discord
 from discord.ext import commands
 
-from config import USER_REPLY_COOLDOWN_SECONDS, CHANNEL_REPLY_COOLDOWN_SECONDS, SEND_TIMEOUT_SECONDS
+from config import USER_REPLY_COOLDOWN_SECONDS, CHANNEL_REPLY_COOLDOWN_SECONDS, SEND_TIMEOUT_SECONDS, SOURCE_URL
 from nuhuh.responder import Responder
 from nuhuh.helptext import HELP_COLOR, help_text, mention_kind
 from nuhuh.signals import message_signals
+from nuhuh.legal import legal_notice
 
 
 class Pings(commands.Cog):
@@ -44,11 +49,12 @@ class Pings(commands.Cog):
                 mentions = discord.AllowedMentions.none()
                 if permissions and permissions.embed_links:
                     embed = discord.Embed(title=title, description=description, color=HELP_COLOR)
+                    embed.add_field(name="Source & license", value=legal_notice(SOURCE_URL, markdown=True), inline=False)
                     embed.set_footer(text=footer)
                     await message.channel.send(embed=embed, allowed_mentions=mentions)
                 else:
                     await message.channel.send(
-                        f"**{title}**\n\n{description}\n\n{footer}", allowed_mentions=mentions
+                        f"**{title}**\n\n{description}\n\n{legal_notice(SOURCE_URL)}\n\n{footer}", allowed_mentions=mentions
                     )
 
             await self.responder.handle_help(

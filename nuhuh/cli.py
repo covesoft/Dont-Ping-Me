@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 covesoft and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See LICENSE and NOTICE.md for copyright and warranty information.
+
 """Play the same core game locally, without Discord or third-party packages."""
 
 import argparse
@@ -10,6 +14,7 @@ from .engine import Game, positive_id, timestamp
 from .phrases import DEFAULT_PHRASES, MESSAGE_EVENT_IDS, MEMORY_EVENTS, PhraseBook
 from .helptext import help_text, mention_kind
 from .signals import message_signals
+from .legal import configured_source_url, legal_notice
 
 
 def _id(text: str) -> int:
@@ -89,7 +94,13 @@ def encounter_tour(phrases, guild_id, user_id):
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Just Don't — an offline demo of nuhuh.")
+    parser = argparse.ArgumentParser(description="Just Don't — an offline demo of nuhuh.",
+                                     formatter_class=argparse.RawDescriptionHelpFormatter)
+    try:
+        source_url = configured_source_url()
+    except ValueError as exc:
+        parser.error(str(exc))
+    parser.epilog = legal_notice(source_url)
     parser.add_argument("--version", action="version", version=f"nuhuh {__version__}")
     parser.add_argument("--guild-id", type=_id, default=1, help="simulated guild (default: 1)")
     parser.add_argument("--user-id", type=_id, default=1, help="simulated user (default: 1)")
@@ -153,7 +164,7 @@ def main(argv: list[str] | None = None) -> int:
                 if kind == "help":
                     info = game.help(args.guild_id, args.user_id, now=time.time() + offset)
                     title, description, footer = help_text(info.count > 0)
-                    print(f"{title}\n\n{description}\n\n{footer}")
+                    print(f"{title}\n\n{description}\n\n{legal_notice(source_url)}\n\n{footer}")
                     continue
                 if kind == "help_extra":
                     ping(response_event="help_extra", content=command[1:])

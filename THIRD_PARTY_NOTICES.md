@@ -4,8 +4,9 @@
 property ranges, derived from the Unicode Character Database:
 https://github.com/unicode-org/unicodetools/blob/main/unicodetools/data/ucd/17.0.0/emoji/emoji-data.txt
 
-These data are covered by the following license; the rest of this project
-uses the MIT license in LICENSE. No Unicode artwork is included.
+These data are covered by the following license. The project's first-party
+material is offered under AGPL-3.0-only; see [LICENSE](LICENSE) and
+[NOTICE.md](NOTICE.md). No Unicode artwork is included.
 
 ```text
 UNICODE LICENSE V3

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.2 — 2026-11-04
+
+- Offer the first-party project under AGPL-3.0-only, with the complete standard
+  license text and project/source-file notices. Retain the prior MIT notice for
+  earlier releases and preserve the separate Unicode terms.
+- Add source access and copyright/license/warranty information to both Discord
+  help variants, plain-text fallback, offline help, and CLI argument help.
+- Add optional `NUHUH_SOURCE_URL` configuration for the actual running copy;
+  document source publication and versioned URLs for modified hosted forks.
+- Keep phrase copy, personality footers, interaction behavior, dependencies,
+  and database schema unchanged. No database reset is needed.
+
 ## 0.5.1 — 2026-11-04
 
 - Reworked the README as a friendly introduction with quick play instructions

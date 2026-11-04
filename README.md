@@ -95,5 +95,6 @@ intents. It remembers interaction state, not message bodies; see the
 | Prepare a release | [Release checklist](RELEASE_CHECKLIST.md) and [changelog](CHANGELOG.md) |
 
 The Python package is named `nuhuh`, the project's original codename.
-Project license terms are in [LICENSE](LICENSE); bundled Unicode data has its
-own [third-party notice](THIRD_PARTY_NOTICES.md).
+Licensed under **AGPL-3.0-only**; see [LICENSE](LICENSE) for the full terms and
+[NOTICE.md](NOTICE.md) for scope, copyright, and earlier MIT releases. Bundled
+Unicode data retains its own [third-party notice](THIRD_PARTY_NOTICES.md).

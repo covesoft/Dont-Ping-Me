@@ -85,6 +85,30 @@ first ping.
 For offline play use `/help` and `/help me please`. The former shows the same
 friendly/refresher text without counting, and the latter counts as a ping.
 
+## Source access and license
+
+The first-party project is offered under **AGPL-3.0-only** from v0.5.2. See
+[LICENSE](LICENSE), [NOTICE.md](NOTICE.md), and the separate
+[Unicode notice](THIRD_PARTY_NOTICES.md).
+
+Both help variants include a **Source & license** field. The same source,
+copyright, redistribution, and no-warranty information appears in plain-text
+help, offline `/help`, and `python -m nuhuh --help`.
+
+`NUHUH_SOURCE_URL` defaults to `https://github.com/covesoft/Dont-Ping-Me`.
+Configure it in the Discord bot's `.env` or host environment to point to a
+public source location for the actual running version. Prefer a commit, release,
+or archive URL. When running a modified fork, publish its corresponding source
+and change this URL; pointing only to unmodified upstream code is insufficient.
+Include custom phrase files needed to run your version, while keeping tokens,
+databases, logs, and private runtime data out of the source publication.
+
+The URL must use HTTPS, contain no credentials/whitespace/angle brackets, and
+fit within 500 UTF-16 units so the help card remains valid. Startup validates
+this shape without fetching the page. Check public accessibility and content
+yourself before deployment. The CLI reads this variable from its process
+environment; it does not load dotenv or require an additional package.
+
 ## Data, updates, and backups
 
 Bot data lives in `.nuhuh/bot.sqlite3`, anchored to the project folder. CLI

@@ -20,7 +20,12 @@ Review the selected release before installing. In `/etc/nuhuh.env`, put:
 
 ```text
 NUHUH_DISCORD_TOKEN=your_private_token
+NUHUH_SOURCE_URL=https://github.com/covesoft/Dont-Ping-Me
 ```
+
+Before starting, make the source URL identify the actual version being hosted.
+Modified forks must publish their changes and use their own public source URL;
+prefer an immutable commit/release. See [source access and license](OPERATING.md#source-access-and-license).
 
 Then install the service:
 

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 covesoft and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See LICENSE and NOTICE.md for copyright and warranty information.
+
 """Extract small game cues from an already-qualified mention; retain no text."""
 
 from dataclasses import dataclass

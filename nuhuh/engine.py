@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 covesoft and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See LICENSE and NOTICE.md for copyright and warranty information.
+
 """Transport-independent counting, selection, and delivery acknowledgement.
 
 Each ping() call represents one qualifying interaction. Adapters filter events,

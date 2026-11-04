@@ -34,4 +34,4 @@ Stack: Python, SQLite, and discord.py for optional Discord play.
 
 For implementation and customization, see [DEVELOPING.md](DEVELOPING.md).
 Discord setup and operation are in [OPERATING.md](OPERATING.md).
-Project license terms are in [LICENSE](LICENSE).
+Licensed under **AGPL-3.0-only**. See [LICENSE](LICENSE) and [NOTICE.md](NOTICE.md).

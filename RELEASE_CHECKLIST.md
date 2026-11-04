@@ -39,7 +39,8 @@ replace verification of a particular release or hosted installation.
 - [ ] Confirm ordinary messages and unsupported contexts remain silent.
 - [ ] Check that tracked files and release attachments contain no credentials,
       runtime data, logs, or private planning documents.
-- [ ] Settle the intended distribution license and align public license references.
+- [x] Select AGPL-3.0-only and align license text, project notices, and current documentation.
+- [ ] Verify the hosted help source URL is public and contains the actual running version.
 - [ ] Decide whether the submission includes a continuously hosted bot; verify
       that installation if it does.
 - [ ] Record the jam deadline and submission fields, identify the release commit,

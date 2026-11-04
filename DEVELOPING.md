@@ -215,6 +215,7 @@ participant activity. The draws are pseudorandom probabilities, not schedules.
 | `nuhuh/engine.py` | Atomic counting, replay protection, state, and delivery acknowledgement |
 | `nuhuh/phrases.py` | Validate editable content and select deterministic replies |
 | `nuhuh/cli.py` | Run the same game offline |
+| `nuhuh/legal.py` | Shared source URL validation and source/license notices |
 
 Counting and selection use a SQLite `BEGIN IMMEDIATE` transaction. Help and play
 share message-ID replay protection over a bounded 24-hour observation window.
@@ -255,3 +256,21 @@ alone do not verify channel permissions, connectivity, or comic timing.
 GitHub Actions runs the resource check and previews on Ubuntu/Windows with
 Python 3.11/3.13. See the repository's Actions tab for a particular commit's status.
 Release changes are recorded in [CHANGELOG.md](CHANGELOG.md).
+
+## Licensing contributions and forks
+
+The first-party code, documentation, and phrase data are offered under
+**AGPL-3.0-only** from v0.5.2. Source files carry SPDX notices pointing to
+[NOTICE.md](NOTICE.md) and the full [LICENSE](LICENSE). Earlier MIT releases and
+separate Unicode terms are documented in the notice; retain applicable notices.
+
+Help copy in `nuhuh/helptext.py` remains title/description/footer. Legal information
+is rendered separately by `nuhuh/legal.py`, preserving the persona's closing line.
+Discord uses a dedicated help field or plain-text fallback; offline help shares
+the same source/license information without importing Discord or dotenv.
+
+When hosting a modified copy, make the corresponding source available to its
+users and set `NUHUH_SOURCE_URL` to that version. See the
+[operator instructions](OPERATING.md#source-access-and-license). Preserve notices
+and identify changes as the license requires. Keep credentials and runtime data
+out of published source.

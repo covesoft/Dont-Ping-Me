@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 covesoft and contributors
+# SPDX-License-Identifier: AGPL-3.0-only
+# See LICENSE and NOTICE.md for copyright and warranty information.
+
 """Adapter tests use real discord.py types and fake sends; they never log in."""
 
 import importlib.util
@@ -12,6 +16,7 @@ if HAS_DISCORD:
     import discord
     import discordbot as bot_module
     from cogs.pings import Pings
+    from config import SOURCE_URL
 
 
 @unittest.skipUnless(HAS_DISCORD, "Install requirements.txt to run Discord adapter tests")
@@ -98,6 +103,10 @@ class DiscordTests(unittest.IsolatedAsyncioTestCase):
                 kwargs = message.channel.send.await_args.kwargs
                 self.assertTrue(kwargs["embed"].title.startswith(title))
                 self.assertEqual(kwargs["embed"].footer.text, footer)
+                legal = next(field for field in kwargs["embed"].fields if field.name == "Source & license")
+                self.assertIn(SOURCE_URL, legal.value)
+                self.assertIn("AGPL-3.0-only", legal.value)
+                self.assertIn("No warranty", legal.value)
                 self.assertEqual(kwargs["allowed_mentions"].to_dict(), {"parse": []})
 
     async def test_help_with_extra_words_routes_to_the_new_game_pool(self):
@@ -131,6 +140,9 @@ class DiscordTests(unittest.IsolatedAsyncioTestCase):
                 await send(SimpleNamespace(count=count))
                 args, kwargs = message.channel.send.await_args
                 self.assertTrue(args[0].endswith(footer))
+                self.assertIn(SOURCE_URL, args[0])
+                self.assertIn("AGPL-3.0-only", args[0])
+                self.assertIn("No warranty", args[0])
                 self.assertNotIn("embed", kwargs)
 
     async def test_missing_send_permission_still_reaches_counting_service(self):
