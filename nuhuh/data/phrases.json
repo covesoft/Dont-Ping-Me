@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "tiers": [
+    {
+      "id": "objection",
+      "min_count": 1,
+      "phrases": [
+        {"id": "objection.sign", "text": "The name was the instruction."},
+        {"id": "objection.dont", "text": "Just don't. It was a very short briefing."},
+        {"id": "objection.received", "text": "Your ping has been received and resented."}
+      ]
+    },
+    {
+      "id": "negotiation",
+      "min_count": 4,
+      "phrases": [
+        {"id": "negotiation.compromise", "text": "A compromise: you stop, and I stop having to ask."},
+        {"id": "negotiation.paperwork", "text": "I have opened a file. It is mostly sighing."},
+        {"id": "negotiation.count", "text": "{count} pings. Remarkable commitment to a simple misunderstanding."}
+      ]
+    },
+    {
+      "id": "familiarity",
+      "min_count": 10,
+      "phrases": [
+        {"id": "familiarity.chair", "text": "Oh, it's you. I haven't saved you a chair. That's just where it is."},
+        {"id": "familiarity.quiet", "text": "It was quiet without you. I had almost adjusted."},
+        {"id": "familiarity.tomorrow", "text": "Same time tomorrow, I suppose. That was not an invitation."}
+      ]
+    }
+  ]
+}
