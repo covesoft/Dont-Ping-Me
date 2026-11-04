@@ -83,7 +83,10 @@ class DiscordTests(unittest.IsolatedAsyncioTestCase):
                 cog.responder.handle_help.assert_not_awaited()
 
     async def test_exact_help_uses_friendly_or_snarky_embed_from_history(self):
-        for count, title in [(0, "Just Don't"), (4, "A refresher")]:
+        for count, title, footer in [
+            (0, "Just Don't", "You don't have to play. I'm fine with that!"),
+            (4, "A refresher", "There. Now you can't say you didn't know."),
+        ]:
             with self.subTest(count=count):
                 cog, message = self.cog(), self.fake_message()
                 message.text = "  <@!99> HeLp\n"
@@ -94,7 +97,7 @@ class DiscordTests(unittest.IsolatedAsyncioTestCase):
                 await send(SimpleNamespace(count=count))
                 kwargs = message.channel.send.await_args.kwargs
                 self.assertTrue(kwargs["embed"].title.startswith(title))
-                self.assertIn("doesn't count as a ping", kwargs["embed"].footer.text)
+                self.assertEqual(kwargs["embed"].footer.text, footer)
                 self.assertEqual(kwargs["allowed_mentions"].to_dict(), {"parse": []})
 
     async def test_help_with_extra_words_routes_to_the_new_game_pool(self):
@@ -105,15 +108,20 @@ class DiscordTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(cog.responder.handle.await_args.kwargs["response_event"], "help_extra")
 
     async def test_help_falls_back_to_plain_text_without_embed_permission(self):
-        cog, message = self.cog(), self.fake_message()
-        message.text = "<@99> help"
-        message.channel.permissions_for.return_value.embed_links = False
-        await cog.on_message(message)
-        send = cog.responder.handle_help.await_args.kwargs["send"]
-        await send(SimpleNamespace(count=0))
-        args, kwargs = message.channel.send.await_args
-        self.assertIn("Mention me to play", args[0])
-        self.assertNotIn("embed", kwargs)
+        for count, footer in [
+            (0, "You don't have to play. I'm fine with that!"),
+            (4, "There. Now you can't say you didn't know."),
+        ]:
+            with self.subTest(count=count):
+                cog, message = self.cog(), self.fake_message()
+                message.text = "<@99> help"
+                message.channel.permissions_for.return_value.embed_links = False
+                await cog.on_message(message)
+                send = cog.responder.handle_help.await_args.kwargs["send"]
+                await send(SimpleNamespace(count=count))
+                args, kwargs = message.channel.send.await_args
+                self.assertTrue(args[0].endswith(footer))
+                self.assertNotIn("embed", kwargs)
 
     async def test_missing_send_permission_still_reaches_counting_service(self):
         cog, message = self.cog(), self.fake_message()

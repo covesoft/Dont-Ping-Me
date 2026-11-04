@@ -8,7 +8,7 @@ import time
 from . import __version__
 from .engine import Game, positive_id, timestamp
 from .phrases import DEFAULT_PHRASES, PhraseBook
-from .helptext import HELP_FOOTER, help_text, mention_kind
+from .helptext import help_text, mention_kind
 
 
 def _id(text: str) -> int:
@@ -125,8 +125,8 @@ def main(argv: list[str] | None = None) -> int:
                 kind = mention_kind(f"<@1> {command[1:]}", 1) if command.startswith("/") else "ping"
                 if kind == "help":
                     info = game.help(args.guild_id, args.user_id, now=time.time() + offset)
-                    title, description = help_text(info.count > 0)
-                    print(f"{title}\n\n{description}\n\n{HELP_FOOTER}")
+                    title, description, footer = help_text(info.count > 0)
+                    print(f"{title}\n\n{description}\n\n{footer}")
                     continue
                 if kind == "help_extra":
                     ping(response_event="help_extra")

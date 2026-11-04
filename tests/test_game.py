@@ -227,6 +227,8 @@ class CLITests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("Just Don't — how to play", result.stdout)
         self.assertIn("A refresher. Apparently.", result.stdout)
+        self.assertIn("You don't have to play. I'm fine with that!", result.stdout)
+        self.assertIn("There. Now you can't say you didn't know.", result.stdout)
         self.assertIn("[1 / objection] [first_guild_ping]", result.stdout)
         self.assertIn("[2 / objection] [help_extra]", result.stdout)
         self.assertNotIn("[3 /", result.stdout)

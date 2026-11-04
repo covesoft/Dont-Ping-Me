@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.1 — 2026-11-04
+
+- Help copy now returns a history-aware footer alongside its title and
+  description, shared by Discord embeds, plain-text fallback, and the CLI.
+- Polished paragraph spacing and closing lines while retaining the updated
+  button persona. Game behavior and database format are unchanged.
+
 ## 0.4.0 — 2026-11-04
 
 - Added exact mention help: friendly before a user's first ping in a guild,

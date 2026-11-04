@@ -12,24 +12,24 @@ def mention_kind(content: str, bot_id: int) -> str:
     return "help" if not content.strip()[match.end():].strip() else "help_extra"
 
 
-def help_text(has_pinged: bool) -> tuple[str, str]:
+def help_text(has_pinged: bool) -> tuple[str, str, str]:
+    """Return the title, description, and footer for this user's help variant."""
     if has_pinged:
         return (
             "A refresher. Apparently.",
             "You've already found the button, so I suspect you know the procedure.\n\n"
-            "**Mention me. I object.**\n   You do it again. My responses change as our "
-            "little disagreement develops.\n\n"
-            "There. The instructions, now in a box. Surely that will help.",
+            "**Mention me. I object.**\nYou do it again. My responses change as our "
+            "little disagreement develops.",
+            "There. Now you can't say you didn't know.",
         )
     return (
         "Just Don't — how to play",
         "Hi! I'm a button with one very simple request.\n\n"
-        "Leave me be. That's it. Just don't ping me and we'll be dandy.\n"
+        "Leave me be. That's it. Just don't ping me and we'll be dandy.\n\n"
         "**Mention me to play.** I remember your pings here, and my objections "
-        "change as the dance goes on.\n\n"
-        "You can stop whenever you like. That's the part I'm rooting for.",
+        "change as the dance goes on.",
+        "You don't have to play. I'm fine with that!",
     )
 
 
-HELP_FOOTER = "Asking for help doesn't count as a ping."
 HELP_COLOR = 0xB7783C
