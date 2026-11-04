@@ -276,6 +276,12 @@ they do not change the persona copy or CLI notices.
 
 ## Owner reports
 
+The empty `NuhuhBot.on_message` override is intentional: `commands.Bot` would
+otherwise call its built-in prefix-command parser for incoming messages.
+Cog listeners still receive events independently, so `Pings.on_message` owns
+mention filtering, help, owner commands, and gameplay. Keep the override while
+using this routing; adding `process_commands()` would enable a separate parser.
+
 Pings checks `config.OWNER_IDS` after the normal message filters and before
 help/game routing. Only exact leading-mention `guilds`/`size` requests bypass
 gameplay for owners. It uses `Responder.handle_help` for non-counting replay,

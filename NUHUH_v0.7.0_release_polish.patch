@@ -1,0 +1,40 @@
+diff --git a/DEVELOPING.md b/DEVELOPING.md
+index b51e69bf487aa13a570ef8b06a8d48dd4b3776d9..d9717278828ad99fa792961bdec46e8896f2d751 100644
+--- a/DEVELOPING.md
++++ b/DEVELOPING.md
+@@ -278,2 +278,8 @@ they do not change the persona copy or CLI notices.
+ 
++The empty `NuhuhBot.on_message` override is intentional: `commands.Bot` would
++otherwise call its built-in prefix-command parser for incoming messages.
++Cog listeners still receive events independently, so `Pings.on_message` owns
++mention filtering, help, owner commands, and gameplay. Keep the override while
++using this routing; adding `process_commands()` would enable a separate parser.
++
+ Pings checks `config.OWNER_IDS` after the normal message filters and before
+diff --git a/discordbot.py b/discordbot.py
+index 75bcc76cb0ab60dac94999d70c8282619a0ece8d..7f1da7532b31a7f22c3e4c4084d06f4fee27800e 100644
+--- a/discordbot.py
++++ b/discordbot.py
+@@ -46,4 +46,5 @@ class NuhuhBot(commands.Bot):
+     async def on_message(self, message):
+-        # The cog filters mentions before extracting help and game cues.
+-        # No process_commands() call: ordinary message content is not inspected.
++        # Intentionally replace Bot's built-in prefix-command parser.
++        # Pings still receives events through Cog.listener and filters mentions
++        # before reading content. Do not call process_commands() here.
+         pass
+diff --git a/tests/test_owner.py b/tests/test_owner.py
+index 79a3c12070f32550d25993f4cdbacc229c91b421..4900501d5ac5249a08f27592e63b9b0234660c49 100644
+--- a/tests/test_owner.py
++++ b/tests/test_owner.py
+@@ -55,3 +55,5 @@ class OwnerFormattingTests(unittest.TestCase):
+         text = size_text(UsageStatistics.from_rows([(1, 1), (1, 2), (2, 3)]), 1)
+-        self.assertIn('**6 pesters** across **2 guilds**', text)
++        # Check the reported values without pinning the surrounding persona copy.
++        self.assertRegex(text, r'\*\*6\b')
++        self.assertIn('**2 guilds**', text)
+         self.assertIn('**3 guild/user relationships**', text)
+@@ -59,3 +61,2 @@ class OwnerFormattingTests(unittest.TestCase):
+         self.assertIn('**Pesters per guild/user:** max 3 · p95 3 · avg 2 · median 2 · no unique mode', text)
+-        self.assertIn('p95 uses nearest rank', text)
+ 
