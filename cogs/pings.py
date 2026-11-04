@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See LICENSE and NOTICE.md for copyright and warranty information.
 
-"""Only human direct mentions in ordinary guild text channels enter the game."""
+"""Human direct mentions in supported guild message channels enter the game."""
 
 import discord
 from discord.ext import commands
@@ -10,6 +10,7 @@ from discord.ext import commands
 from config import USER_REPLY_COOLDOWN_SECONDS, CHANNEL_REPLY_COOLDOWN_SECONDS, SEND_TIMEOUT_SECONDS, SOURCE_URL
 from nuhuh.responder import Responder
 from nuhuh.helptext import HELP_COLOR, help_text, mention_kind
+from cogs.channels import PLAY_CHANNELS, can_send_message, channel_permissions
 from nuhuh.signals import message_signals
 from nuhuh.legal import legal_notice
 
@@ -27,17 +28,17 @@ class Pings(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         # Ignore messages that are not relevant to the game.
-        #  This includes messages from bots, messages in DMs, messages in non-text channels,
+        #  This includes bots, DMs, unsupported channel containers,
         #  and messages that do not mention the bot.
         if (self.bot.user is None or message.guild is None or message.author.bot
                 or message.webhook_id is not None
-                or not isinstance(message.channel, discord.TextChannel)
+                or not isinstance(message.channel, PLAY_CHANNELS)
                 or message.type not in (discord.MessageType.default, discord.MessageType.reply)
                 or not any(user.id == self.bot.user.id for user in message.mentions)):
             return
         me = message.guild.me
-        permissions = message.channel.permissions_for(me) if me is not None else None
-        can_send = bool(permissions and permissions.view_channel and permissions.send_messages)
+        permissions = channel_permissions(message.channel, me)
+        can_send = can_send_message(message.channel, permissions)
         content = message.content
         kind = mention_kind(content, self.bot.user.id)
 
@@ -49,12 +50,12 @@ class Pings(commands.Cog):
                 mentions = discord.AllowedMentions.none()
                 if permissions and permissions.embed_links:
                     embed = discord.Embed(title=title, description=description, color=HELP_COLOR)
-                    embed.add_field(name="Source & license", value=legal_notice(SOURCE_URL, markdown=True), inline=False)
+                    #embed.add_field(name="Source & license", value=legal_notice(SOURCE_URL, markdown=True), inline=False)
                     embed.set_footer(text=footer)
                     await message.channel.send(embed=embed, allowed_mentions=mentions)
                 else:
                     await message.channel.send(
-                        f"**{title}**\n\n{description}\n\n{legal_notice(SOURCE_URL)}\n\n{footer}", allowed_mentions=mentions
+                        f"**{title}**\n\n{description}\n\n{footer}", allowed_mentions=mentions
                     )
 
             await self.responder.handle_help(

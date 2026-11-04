@@ -16,7 +16,6 @@ if HAS_DISCORD:
     import discord
     import discordbot as bot_module
     from cogs.pings import Pings
-    from config import SOURCE_URL
 
 
 @unittest.skipUnless(HAS_DISCORD, "Install requirements.txt to run Discord adapter tests")
@@ -24,7 +23,8 @@ class DiscordTests(unittest.IsolatedAsyncioTestCase):
     def fake_message(self):
         channel = MagicMock(spec=discord.TextChannel)
         channel.id = 10
-        channel.permissions_for.return_value = SimpleNamespace(view_channel=True, send_messages=True, embed_links=True)
+        channel.permissions_for.return_value = SimpleNamespace(view_channel=True, send_messages=True,
+                                                               send_messages_in_threads=True, embed_links=True)
         channel.send = AsyncMock()
 
         class Message:
@@ -65,7 +65,7 @@ class DiscordTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(sent_kwargs["allowed_mentions"].to_dict(), {"parse": []})
 
     async def test_irrelevant_messages_are_ignored(self):
-        for change in ("ordinary", "bot", "webhook", "dm", "thread", "system", "nonping_reply"):
+        for change in ("ordinary", "bot", "webhook", "dm", "forum", "category", "system", "nonping_reply"):
             with self.subTest(change=change):
                 cog, message = self.cog(), self.fake_message()
                 message.forbid_content = True
@@ -77,8 +77,10 @@ class DiscordTests(unittest.IsolatedAsyncioTestCase):
                     message.webhook_id = 5
                 elif change == "dm":
                     message.guild = None
-                elif change == "thread":
-                    message.channel = MagicMock(spec=discord.Thread)
+                elif change == "forum":
+                    message.channel = MagicMock(spec=discord.ForumChannel)
+                elif change == "category":
+                    message.channel = MagicMock(spec=discord.CategoryChannel)
                 elif change == "system":
                     message.type = discord.MessageType.pins_add
                 elif change == "nonping_reply":
@@ -103,10 +105,6 @@ class DiscordTests(unittest.IsolatedAsyncioTestCase):
                 kwargs = message.channel.send.await_args.kwargs
                 self.assertTrue(kwargs["embed"].title.startswith(title))
                 self.assertEqual(kwargs["embed"].footer.text, footer)
-                legal = next(field for field in kwargs["embed"].fields if field.name == "Source & license")
-                self.assertIn(SOURCE_URL, legal.value)
-                self.assertIn("AGPL-3.0-only", legal.value)
-                self.assertIn("No warranty", legal.value)
                 self.assertEqual(kwargs["allowed_mentions"].to_dict(), {"parse": []})
 
     async def test_help_with_extra_words_routes_to_the_new_game_pool(self):
@@ -140,9 +138,6 @@ class DiscordTests(unittest.IsolatedAsyncioTestCase):
                 await send(SimpleNamespace(count=count))
                 args, kwargs = message.channel.send.await_args
                 self.assertTrue(args[0].endswith(footer))
-                self.assertIn(SOURCE_URL, args[0])
-                self.assertIn("AGPL-3.0-only", args[0])
-                self.assertIn("No warranty", args[0])
                 self.assertNotIn("embed", kwargs)
 
     async def test_missing_send_permission_still_reaches_counting_service(self):
@@ -162,6 +157,7 @@ class DiscordTests(unittest.IsolatedAsyncioTestCase):
                 # load_extension imports a fresh module, so compare the loaded
                 # cog's public identity rather than a previously imported class.
                 self.assertEqual(client.get_cog("Pings").qualified_name, "Pings")
+                self.assertEqual(client.get_cog("Welcome").qualified_name, "Welcome")
                 self.assertEqual(client.tree.get_commands(), [])
                 reply = await client.game.ping(1, 1, now=1000)
                 self.assertEqual(reply.event_id, "first_guild_ping")
@@ -170,3 +166,67 @@ class DiscordTests(unittest.IsolatedAsyncioTestCase):
     async def test_missing_token_has_an_actionable_error(self):
         with patch.object(bot_module, "DISCORD_TOKEN", ""), self.assertRaisesRegex(SystemExit, "NUHUH_DISCORD_TOKEN"):
             await bot_module.main()
+
+    async def test_all_supported_guild_surfaces_route_mentions_and_help(self):
+        for channel_type in (discord.TextChannel, discord.VoiceChannel, discord.StageChannel, discord.Thread):
+            for help_request in (False, True):
+                with self.subTest(channel=channel_type, help=help_request):
+                    cog, message = self.cog(), self.fake_message()
+                    channel = MagicMock(spec=channel_type)
+                    channel.id = 10
+                    channel.permissions_for.return_value = SimpleNamespace(
+                        view_channel=True, send_messages=True, send_messages_in_threads=True, embed_links=True)
+                    channel.send = AsyncMock()
+                    if channel_type is discord.Thread:
+                        channel.archived = False
+                        channel.locked = False
+                    message.channel = channel
+                    if help_request:
+                        message.text = "<@99> help"
+                    await cog.on_message(message)
+                    handle = cog.responder.handle_help if help_request else cog.responder.handle
+                    handle.assert_awaited_once()
+                    self.assertEqual(handle.await_args.args, (1, 2, 10, 100))
+                    self.assertTrue(handle.await_args.kwargs["can_send"])
+
+    async def test_threads_use_their_own_send_permission_and_respect_state(self):
+        for thread_send, ordinary_send, archived, locked, expected in (
+            (True, False, False, False, True),
+            (False, True, False, False, False),
+            (True, True, True, False, False),
+            (True, True, False, True, False),
+        ):
+            with self.subTest(thread_send=thread_send, archived=archived, locked=locked):
+                cog, message = self.cog(), self.fake_message()
+                thread = MagicMock(spec=discord.Thread)
+                thread.id = 10
+                thread.archived, thread.locked = archived, locked
+                thread.permissions_for.return_value = SimpleNamespace(
+                    view_channel=True, send_messages=ordinary_send,
+                    send_messages_in_threads=thread_send, embed_links=True)
+                message.channel = thread
+                await cog.on_message(message)
+                cog.responder.handle.assert_awaited_once()
+                self.assertEqual(cog.responder.handle.await_args.kwargs["can_send"], expected)
+
+    async def test_missing_visibility_or_member_suppresses_send_without_dropping_ping(self):
+        for missing_member in (False, True):
+            with self.subTest(missing_member=missing_member):
+                cog, message = self.cog(), self.fake_message()
+                if missing_member:
+                    message.guild.me = None
+                else:
+                    message.channel.permissions_for.return_value.view_channel = False
+                await cog.on_message(message)
+                cog.responder.handle.assert_awaited_once()
+                self.assertFalse(cog.responder.handle.await_args.kwargs["can_send"])
+
+    async def test_missing_thread_parent_cache_preserves_the_observed_ping(self):
+        cog, message = self.cog(), self.fake_message()
+        thread = MagicMock(spec=discord.Thread)
+        thread.id = 10
+        thread.permissions_for.side_effect = discord.ClientException("Parent channel not found")
+        message.channel = thread
+        await cog.on_message(message)
+        cog.responder.handle.assert_awaited_once()
+        self.assertFalse(cog.responder.handle.await_args.kwargs["can_send"])

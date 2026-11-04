@@ -16,6 +16,8 @@ replace verification of a particular release or hosted installation.
 - [x] Invalid phrase files and incompatible alpha schemas produce useful errors.
 - [x] Copy checks permit phrase additions/removals/rewrites without an exact total.
 - [x] Setup guides, privacy notes, third-party notices, and a Linux service template.
+- [x] Thread/forum and voice/stage text routing with surface-appropriate send checks.
+- [x] Delayed join introductions with destination rules, duplicate guards, and cancellation.
 
 ## Confirmed through live play
 
@@ -37,6 +39,10 @@ replace verification of a particular release or hosted installation.
 - [ ] Check long text, negotiation, group incidents, milestones, and rare replies live.
 - [ ] Check a remembered callback across a restart and apology aftermath.
 - [ ] Confirm ordinary messages and unsupported contexts remain silent.
+- [ ] Test mentions/help in a thread, forum post, and voice text chat, including
+      denied thread posting and an invited private thread.
+- [ ] Test a new installation's delayed intro, system/bot-channel routing, and
+      cancellation on removal. Confirm restart/reconnect does not broadcast to existing guilds.
 - [ ] Check that tracked files and release attachments contain no credentials,
       runtime data, logs, or private planning documents.
 - [x] Select AGPL-3.0-only and align license text, project notices, and current documentation.

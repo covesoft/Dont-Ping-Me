@@ -14,7 +14,7 @@ rather accustomed to you.
 
 In a server where Just Don't is installed:
 
-1. Mention the bot in a regular text channel.
+1. Mention the bot in a channel where it can read and reply.
 2. Read its objection.
 3. Decide whether you've learned anything.
 
@@ -27,6 +27,10 @@ For instructions, send a direct mention followed by `help`:
 Select the actual bot mention in Discord; its server nickname may differ.
 An exact help request doesn't count as a ping. Give it about five seconds
 between replies: it remembers rapid pings, but won't queue a flood of responses.
+
+It plays in text channels, threads and forum posts, and voice/stage text chat.
+When installed in a new server, it gives one short introduction after about
+15 seconds, if a suitable system or bot channel is available.
 
 ## A small disagreement, with a memory
 

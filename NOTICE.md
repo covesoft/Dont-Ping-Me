@@ -36,8 +36,8 @@ copyright; the license text is reproduced without alteration.
 
 ## Hosted and modified copies
 
-Help includes a source link and license/warranty information in Discord and the
-CLI. Set `NUHUH_SOURCE_URL` to a public HTTPS location containing the source for
+CLI help includes a source link and license/warranty information. Set
+`NUHUH_SOURCE_URL` to a public HTTPS location containing the source for
 the actual running version. A public commit, release, or source archive is
 preferable to a moving branch. Modified copies must publish their own changes,
 including any custom phrase file needed to run that version, and update this

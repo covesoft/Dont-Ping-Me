@@ -38,6 +38,7 @@ class NuhuhBot(commands.Bot):
         DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
         self.game = await AsyncGame.open(phrases, DATABASE_PATH)
         await self.load_extension("cogs.pings")
+        await self.load_extension("cogs.welcome")
 
     async def on_ready(self):
         log.info("Logged in as %s (%s); connected to %s guilds", self.user, self.user.id, len(self.guilds))
@@ -49,7 +50,7 @@ class NuhuhBot(commands.Bot):
 
     async def close(self):
         try:
-            # Unloading the cog drains its sends before the database closes.
+            # Unload cogs to drain replies and cancel pending introductions.
             await super().close()
         finally:
             if self.game is not None:

@@ -8,7 +8,8 @@ Presences intents. Other guild message events still reach the application;
 messages without a direct mention are immediately ignored without inspecting
 content. Mention text is not stored.
 
-For a qualifying human mention in an ordinary guild text channel, the bot stores:
+For a qualifying human mention in a supported guild message channel (including
+threads, forum posts, and voice/stage text chat), the bot stores:
 
 - Guild and user IDs, interaction count, and last observed ping timestamp.
 - Last delivered phrase ID, count at delivery, and up to five recently
@@ -27,6 +28,12 @@ member roster. Other participants are counted from the bot's own interaction
 records. There is no global public list of guilds or players, no analytics
 service, and no generative-AI service used to produce replies at runtime.
 Operational logs may contain guild/channel IDs and error information.
+
+On a new guild join, the bot may send one delayed introduction to the system
+channel or a clearly named bot channel. Routing uses channel metadata and send
+permissions, not surrounding chat or a member roster. Pending/handled join IDs
+are kept in memory until removal or shutdown; introductions create no persistent
+game records and send no DMs.
 
 ## Retention
 

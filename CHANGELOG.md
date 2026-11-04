@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.6.0 — 2026-11-04
+
+- Accept direct mentions in threads/forum posts and voice/stage text chat, with
+  existing guild/user progression and actual-channel response pacing.
+- Use Send Messages in Threads for thread replies; respect missing visibility,
+  locked/archived state, and normal posting permissions without extra intents.
+- Add one plain-text introduction 15 seconds after an actual guild join.
+  Prefer a writable system channel, then an explicitly named bot channel;
+  skip rules/public-updates channels and unsuitable destinations.
+- Cancel pending introductions on removal/shutdown, suppress duplicate join
+  callbacks, and avoid startup/reconnect broadcasts or database schema changes.
+- Keep help rendering separate from these changes, accommodating local cosmetic
+  edits and debug logging. Full notices remain available in the CLI.
+
 ## 0.5.2 — 2026-11-04
 
 - Offer the first-party project under AGPL-3.0-only, with the complete standard

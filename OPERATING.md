@@ -46,10 +46,24 @@ No administrator, message-history, or mention-everyone permission is needed.
 Help falls back to plain text if Embed Links is unavailable in the channel.
 No slash commands need syncing.
 
-The bot handles direct human mentions in ordinary guild text channels. It
-ignores DMs, threads, bots, webhooks, system messages, edits, and role/everyone
-mentions. Pinging replies qualify if the bot is in the user-mention list;
-non-pinging replies do not. Outgoing mention notifications are disabled.
+For threads and forum posts, also grant **Send Messages in Threads**. With the
+three permissions above, the combined invite integer is `274877926400`.
+Threads use this permission instead of ordinary Send Messages. The bot needs
+access to the parent channel and an invitation to participate in private threads;
+it does not need Manage Threads. It will not send into locked or archived threads.
+
+The bot handles direct human mentions in text/announcement channels, public or
+accessible private threads, forum-post threads, and voice/stage text chat. It
+does not join audio. Forum/media containers and categories cannot receive game
+messages directly; their post threads can. DMs, bots, webhooks, synthetic system
+messages, edits, and role/everyone mentions remain ignored. Pinging replies
+qualify if the bot is in the user-mention list. Outgoing mention notifications
+are disabled.
+
+Relationships remain per guild/user across all these surfaces. Each thread or
+voice chat has its own channel cooldown; the same person's guild cooldown still
+applies across channels. Observed game pings continue to count when sending is
+unavailable, with no response queued for later.
 
 Defaults: **5 seconds between attempts per guild/user**, **2 seconds per
 channel**, and a **15-second send timeout**. Attempt reservations persist across
@@ -57,6 +71,30 @@ restarts, including failed attempts. In-flight sends suppress further responses
 for that user or channel while independent users/channels proceed. Nothing
 queues a backlog of jokes. Ctrl+C drains handlers and closes the database.
 Run one process per token/database. See [DEPLOYMENT.md](DEPLOYMENT.md) for Linux hosting.
+
+## Introduction on installation
+
+After an actual guild join, the bot waits 15 seconds and sends one short,
+plain-text introduction. It explains the game, mention-help, and channel access
+controls without pinging anyone or requiring Embed Links.
+
+It first tries the writable system channel. If unavailable, it looks through
+the guild's text channels in order for a writable name containing `bot` or `bots`
+as a separate word, such as `bot-commands` or `🤖-bots`. Rules and public-updates
+channels are excluded. It skips and logs when neither destination is suitable;
+it does not choose an arbitrary general channel or send DMs.
+
+Ordinary startup/reconnect events do not schedule introductions, so existing
+installations receive no retroactive announcement. Duplicate join callbacks
+within a process do not repeat a send or failed attempt. A real removal/rejoin
+can introduce again. Removal and cog unload/shutdown cancel pending work; the
+destination and permissions are checked after the delay. Pending introductions
+are not restored after a process restart.
+
+Set `INTRODUCTIONS_ENABLED = False` in `config.py` to disable them, or adjust
+`INTRO_DELAY_SECONDS`. The existing `SEND_TIMEOUT_SECONDS` bounds the send.
+The introduction copy is in `cogs/welcome.py`. It does not create participants,
+change game counts, or use a database table.
 
 ## Mention help
 
@@ -91,9 +129,10 @@ The first-party project is offered under **AGPL-3.0-only** from v0.5.2. See
 [LICENSE](LICENSE), [NOTICE.md](NOTICE.md), and the separate
 [Unicode notice](THIRD_PARTY_NOTICES.md).
 
-Both help variants include a **Source & license** field. The same source,
-copyright, redistribution, and no-warranty information appears in plain-text
-help, offline `/help`, and `python -m nuhuh --help`.
+The CLI retains source, copyright, redistribution, and no-warranty information
+in offline `/help` and `python -m nuhuh --help`. Source URL configuration is
+shared with the Discord adapter; its presentation can remain separate from the
+game's title, description, and persona footer.
 
 `NUHUH_SOURCE_URL` defaults to `https://github.com/covesoft/Dont-Ping-Me`.
 Configure it in the Discord bot's `.env` or host environment to point to a
@@ -138,7 +177,9 @@ and parameterized record-deletion procedures, including retained backups.
 | Symptom | Check |
 | --- | --- |
 | Startup reports a missing token | Set `NUHUH_DISCORD_TOKEN` in `.env` or the host environment; run from the project folder |
-| No response to a ping | Use the actual direct mention in a regular guild text channel; check View Channel/Send Messages and allow five seconds |
+| No response to a ping | Use an actual direct mention in a supported guild channel; check View Channel and the appropriate send permission, then allow five seconds |
+| Thread/post replies are silent | Grant Send Messages in Threads; check access, private-thread invitation, and locked/archived state |
+| No introduction on startup | Introductions are scheduled only by actual joins; check the system/bot-channel destination and config switch for a new installation |
 | A matching message gets an ordinary reply | Special reactions are probabilistic; first contact and returns have higher priority |
 | Help appears as plain text | Enable Embed Links in that channel for the help card |
 | Startup reports invalid phrases | Follow the field/ID named in the error; phrase validation runs before the game database opens |

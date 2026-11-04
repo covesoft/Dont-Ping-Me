@@ -209,6 +209,8 @@ participant activity. The draws are pseudorandom probabilities, not schedules.
 | --- | --- |
 | `discordbot.py` / `config.py` | Startup, configuration, minimal intents, and shutdown |
 | `cogs/pings.py` | Filter events, route help, extract cues, and send replies |
+| `cogs/channels.py` | Supported guild channel types and thread-aware send checks |
+| `cogs/welcome.py` | One delayed introduction per actual join, with destination selection and cancellation |
 | `nuhuh/signals.py` | Extract small cues without retaining message text |
 | `nuhuh/responder.py` | Shared help/game pacing and in-flight send coordination |
 | `nuhuh/async_game.py` | Keep SQLite work on one dedicated worker thread |
@@ -266,8 +268,33 @@ separate Unicode terms are documented in the notice; retain applicable notices.
 
 Help copy in `nuhuh/helptext.py` remains title/description/footer. Legal information
 is rendered separately by `nuhuh/legal.py`, preserving the persona's closing line.
-Discord uses a dedicated help field or plain-text fallback; offline help shares
-the same source/license information without importing Discord or dotenv.
+Offline help retains the full source/license information without importing
+Discord or dotenv. Discord help-rendering edits can stay confined to the adapter;
+they do not change the persona copy or CLI notices.
+
+## Discord channels and introductions
+
+The adapter accepts `TextChannel` (including announcements), `Thread`,
+`VoiceChannel`, and `StageChannel`, while retaining the guild/direct-human-mention
+filter. Forum and media posts arrive as threads; their parent containers and
+categories are not message destinations. Synthetic thread-starter references
+remain excluded so they cannot duplicate the original message's count.
+
+Send eligibility requires View Channel plus Send Messages, or Send Messages in
+Threads for threads. Locked/archived threads are observed without attempting a
+send. No thread management, member-list, audio, or additional privileged intent
+is required. A missing send permission does not drop an observed ping from the
+game engine. Guild/user progression is unchanged; channel pacing uses the actual
+thread/voice/text channel ID.
+
+`cogs/welcome.py` listens to actual join/removal events rather than `on_ready`.
+It tracks pending tasks and seen join IDs in memory. Duplicate join callbacks
+produce one attempt per process; removal clears that join, allowing a real
+rejoin to introduce again. A pending intro waits asynchronously, resolves the
+current guild/destination/permissions, and performs a bounded send. Unload cancels
+and drains its tasks before the bot closes its database. It creates no game
+state and does not replay pending introductions after restart. See the
+[operator guide](OPERATING.md#introduction-on-installation) for routing and config.
 
 When hosting a modified copy, make the corresponding source available to its
 users and set `NUHUH_SOURCE_URL` to that version. See the
