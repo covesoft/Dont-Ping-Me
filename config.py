@@ -16,9 +16,14 @@ from nuhuh.legal import configured_source_url
 
 DISCORD_TOKEN = os.getenv("NUHUH_DISCORD_TOKEN", "")
 NUHUH_VERSION = __version__
+
 DATABASE_PATH = Path(__file__).resolve().parent / ".nuhuh" / "bot.sqlite3"
 PHRASES_PATH = DEFAULT_PHRASES
 SOURCE_URL = configured_source_url()
+
+NUHUH_DETAILS_URL = os.getenv("NUHUH_DETAILS_URL")
+
+# Channel send cooldowns
 USER_REPLY_COOLDOWN_SECONDS = 5
 CHANNEL_REPLY_COOLDOWN_SECONDS = 2
 SEND_TIMEOUT_SECONDS = 15

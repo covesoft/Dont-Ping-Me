@@ -12,6 +12,7 @@ import discord
 from discord.ext import commands
 
 from config import INTRODUCTIONS_ENABLED, INTRO_DELAY_SECONDS, SEND_TIMEOUT_SECONDS
+from config import NUHUH_DETAILS_URL
 from cogs.channels import can_send_message, channel_permissions
 from nuhuh.engine import timestamp
 
@@ -42,9 +43,10 @@ def introduction_text(mention):
         "I've been installed. I wasn't consulted.\n\n"
         "I'm **Just Don't**, a small game about ignoring one very simple request. "
         "Mention me, I object; keep going, and I remember.\n\n"
-        f"For instructions, send {mention} help. Server managers can choose where "
+        f"For instructions, send “{mention} help”. Server managers can choose where "
         "I respond through channel permissions.\n\n"
-        "I'll be over here, hoping that was clear."
+        "I'll be over here, hoping that was clear.\n\n"
+        f"For more details, visit: <{NUHUH_DETAILS_URL}>"
     )
 
 
