@@ -459,6 +459,9 @@
         "text": "So this is how my time here begins."
       }
     ],
+
+
+    
     "new_user_in_crowd": [
       {
         "id": "event.new_user_in_crowd.001",
@@ -493,6 +496,9 @@
         "text": "You had the benefit of watching others make this decision. And yet."
       }
     ],
+
+
+
     "first_user_ping": [
       {
         "id": "event.first_user_ping.001",
@@ -527,6 +533,9 @@
         "text": "I don't believe we've been through this together yet. Briefly: don't."
       }
     ],
+
+
+
     "returning_user": [
       {
         "id": "event.returning_user.001",
@@ -561,6 +570,9 @@
         "text": "For a while there, your contribution to my peace was impeccable."
       }
     ],
+
+
+
     "recent_ping": [
       {
         "id": "event.recent_ping.001",
@@ -595,6 +607,9 @@
         "text": "Ah. A follow-up to the entirely avoidable original."
       }
     ],
+
+
+
     "help_extra": [
       {
         "id": "event.help_extra.001",
@@ -645,6 +660,9 @@
         "text": "You can't help yourself, can you? That does clarify the request."
       }
     ],
+
+
+
     "large_text": [
       {
         "id": "encounter.large_text.001",
@@ -652,7 +670,7 @@
       },
       {
         "id": "encounter.large_text.002",
-        "text": "TL;DR: you pinged me."
+        "text": "TL;DR."
       },
       {
         "id": "encounter.large_text.003",
@@ -676,9 +694,16 @@
       },
       {
         "id": "encounter.large_text.008",
-        "text": "A whole wall of text, and somehow the smallest part was the problem."
+        "text": "You said all that and still had to include me. Thanks. /s"
+      },
+      {
+        "id": "encounter.large_text.009",
+        "text": "A whole wall of text, and yet somehow I'm included?"
       }
     ],
+
+
+
     "emoji": [
       {
         "id": "encounter.emoji.001",
@@ -713,6 +738,9 @@
         "text": "I recognize the artistic effort. I dispute the occasion."
       }
     ],
+
+
+
     "repeated_mentions": [
       {
         "id": "encounter.repeated_mentions.001",
@@ -747,6 +775,9 @@
         "text": "I was already involved. You didn't have to underline it with more of me."
       }
     ],
+
+
+
     "apology": [
       {
         "id": "encounter.apology.001",
@@ -781,6 +812,9 @@
         "text": "Accepted with the sort of optimism that usually precedes an incident."
       }
     ],
+
+
+
     "bargaining": [
       {
         "id": "encounter.bargaining.001",
@@ -815,6 +849,9 @@
         "text": "I have considered your proposal. This took less time than you'd hoped."
       }
     ],
+
+
+
     "group_incident": [
       {
         "id": "encounter.group_incident.001",
@@ -849,6 +886,9 @@
         "text": "A delegation. How unfortunate that I wasn't consulted about receiving one."
       }
     ],
+
+
+
     "shorter_this_time": [
       {
         "id": "encounter.shorter_this_time.001",
@@ -883,6 +923,9 @@
         "text": "An abridged offense. Personal growth takes strange forms."
       }
     ],
+
+
+
     "emoji_callback": [
       {
         "id": "encounter.emoji_callback.001",
@@ -917,6 +960,9 @@
         "text": "I remember the pictures. This is a quieter aesthetic for the same bad idea."
       }
     ],
+
+
+
     "single_knock": [
       {
         "id": "encounter.single_knock.001",
@@ -951,6 +997,9 @@
         "text": "One summons. A modest improvement in an entirely avoidable situation."
       }
     ],
+
+
+
     "broken_promise": [
       {
         "id": "encounter.broken_promise.001",
@@ -985,6 +1034,9 @@
         "text": "The peace was brief. I hope someone took a photograph."
       }
     ],
+
+
+
     "milestone": [
       {
         "id": "encounter.milestone.001",
@@ -1019,6 +1071,9 @@
         "text": "{count} pings, and still no compelling argument for the first one."
       }
     ],
+
+
+
     "rare_admission": [
       {
         "id": "encounter.rare_admission.001",
