@@ -58,6 +58,7 @@ class NuhuhBot(commands.Bot):
 
 
 async def main():
+    log.info("=" * 50)
     if not isinstance(DISCORD_TOKEN, str) or not DISCORD_TOKEN.strip():
         raise SystemExit("Set NUHUH_DISCORD_TOKEN in your environment before starting the Discord bot.")
     log.info("Starting Just Don't / nuhuh %s", NUHUH_VERSION)
@@ -70,7 +71,7 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        log.info("Bot stopped by intervention.")
+        log.info("--- Bot stopped by intervention. ---")
     finally:
-        log.info("Bot stopped.")
+        log.info("-" * 50)
 ### EOF ###
