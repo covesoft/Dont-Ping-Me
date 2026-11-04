@@ -16,6 +16,7 @@ from nuhuh.legal import configured_source_url
 
 DISCORD_TOKEN = os.getenv("NUHUH_DISCORD_TOKEN", "")
 NUHUH_VERSION = __version__
+OWNER_IDS = [int(x) for x in os.getenv("OWNER_IDS", "").split(",") if x.strip().isdigit()]
 
 DATABASE_PATH = Path(__file__).resolve().parent / ".nuhuh" / "bot.sqlite3"
 PHRASES_PATH = DEFAULT_PHRASES
