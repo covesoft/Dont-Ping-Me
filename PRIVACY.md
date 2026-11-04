@@ -1,0 +1,59 @@
+# Data and privacy
+
+Just Don't remembers its own interactions. It does not inspect ordinary message
+content or request Discord's privileged Message Content, Members, or Presences
+intents. Guild message events still reach the application; messages without a
+direct mention are immediately ignored.
+
+For a qualifying human mention in an ordinary guild text channel, the bot stores:
+
+- Guild and user IDs, interaction count, and last observed ping timestamp.
+- Last response-attempt time, last delivered phrase ID, count at delivery,
+  and up to five recently delivered phrase IDs for repetition avoidance.
+- Guild/channel IDs and the last channel response-attempt time for pacing.
+- Message IDs and observation timestamps for a bounded replay window.
+
+It does not store message bodies, attachments, usernames, guild names, or a
+member roster. Other participants are counted from the bot's own interaction
+records. There is no global public list of guilds or players, no analytics
+service, and no generative-AI service used to produce replies at runtime.
+Operational logs may contain guild/channel IDs and error information.
+
+## Retention
+
+Relationships persist until an operator deletes them. Removing the bot from a
+guild does not automatically delete its stored relationships.
+
+Replay IDs are retained for a 24-hour observation window and pruned when another
+qualifying mention is processed. Idle databases can therefore retain expired
+rows until activity resumes. Channel pacing records older than one day, or the
+configured channel cooldown if longer, are pruned on subsequent response claims.
+
+## Access and deletion
+
+The operator of each hosted copy controls its local SQLite database and any
+backups. For data removal, contact that copy's operator. There is no public
+data-deletion command in this release.
+
+Self-hosted operators can stop the bot and execute parameterized SQLite statements:
+
+```python
+from contextlib import closing
+import sqlite3
+
+with closing(sqlite3.connect(".nuhuh/bot.sqlite3")) as db, db:
+    db.execute("DELETE FROM relationships WHERE user_id = ?", (USER_ID,))
+```
+
+Replace `USER_ID` with the person's numeric Discord ID. To remove a guild's data,
+delete its rows from `relationships` and `channel_state` using `guild_id = ?`.
+Replay rows contain no user/guild mapping; they expire through the window above
+or can be cleared as a whole. Apply the same deletion to any retained backups.
+Deleting a relationship makes the next interaction a first encounter again.
+
+To reset an alpha database completely, stop the program, then delete the relevant
+database and matching SQLite sidecars. Never remove a live database underneath
+a running process. The default bot database is `.nuhuh/bot.sqlite3`, anchored to
+the project folder; the CLI uses a separate `.nuhuh/demo.sqlite3` by default.
+
+Discord separately processes messages and bot interactions under its own terms.

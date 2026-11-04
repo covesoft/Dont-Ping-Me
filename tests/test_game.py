@@ -36,10 +36,14 @@ class GameTests(unittest.TestCase):
 
     def test_tier_boundaries_and_evergreen_endpoint(self):
         with Game(self.book) as game:
-            replies = [game.ping(1, 1) for _ in range(30)]
-        self.assertEqual([r.tier_id for r in replies[:4]], ["objection"] * 3 + ["negotiation"])
-        self.assertEqual(replies[8].tier_id, "negotiation")
-        self.assertTrue(all(r.tier_id == "familiarity" for r in replies[9:]))
+            replies = [game.ping(1, 1) for _ in range(200)]
+        expected = [(1, "objection"), (5, "objection"), (6, "disbelief"),
+                    (15, "disbelief"), (16, "bargaining"), (35, "bargaining"),
+                    (36, "administration"), (75, "administration"),
+                    (76, "resignation"), (150, "resignation"), (151, "familiarity"), (200, "familiarity")]
+        for count, tier_id in expected:
+            with self.subTest(count=count):
+                self.assertEqual(replies[count - 1].tier_id, tier_id)
 
     def test_successful_delivery_prevents_repetition_even_after_restart(self):
         last = None
@@ -148,7 +152,7 @@ class PhraseTests(unittest.TestCase):
             PhraseBook.load(self.path)
 
     def test_single_phrase_pool_removed_id_and_escaped_braces(self):
-        raw = {"schema_version": 1, "tiers": [{"id": "only", "min_count": 1, "phrases": [
+        raw = {"schema_version": 3, "context": self.raw["context"], "events": {}, "tiers": [{"id": "only", "min_count": 1, "phrases": [
             {"id": "only.one", "text": "{{sigh}} Number {count}."}
         ]}]}
         book = self.load(raw)
@@ -206,7 +210,16 @@ class CLITests(unittest.TestCase):
         self.assertIn("[returning_user]", interactive.stdout)
         tiers = self.run_cli("--db", ":memory:", "--pings", "15", "--step-seconds", "180", "--debug")
         self.assertEqual(tiers.returncode, 0, tiers.stderr)
-        self.assertIn("[15 / familiarity]", tiers.stdout)
+        self.assertIn("[15 / disbelief]", tiers.stdout)
+
+    def test_tour_previews_all_tiers_without_creating_a_database(self):
+        with tempfile.TemporaryDirectory() as folder:
+            database = Path(folder) / "untouched" / "game.sqlite3"
+            result = self.run_cli("--tour", "--db", str(database))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            for name in ("objection", "disbelief", "bargaining", "administration", "resignation", "familiarity"):
+                self.assertIn("/ " + name + "]", result.stdout)
+            self.assertFalse(database.parent.exists())
 
 
 if __name__ == "__main__":

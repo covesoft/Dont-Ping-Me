@@ -1,4 +1,5 @@
 from contextlib import closing
+from dataclasses import replace
 import json
 from pathlib import Path
 import sqlite3
@@ -12,6 +13,7 @@ from nuhuh.phrases import DEFAULT_PHRASES, PhraseBook, PhraseError
 class ContextTests(unittest.TestCase):
     def setUp(self):
         self.book = PhraseBook.load()
+        self.always_recent = PhraseBook(self.book.tiers, self.book.events, replace(self.book.rules, recent_one_in=1))
 
     def test_first_guild_new_user_and_crowd_threshold(self):
         with Game(self.book) as game:
@@ -28,7 +30,7 @@ class ContextTests(unittest.TestCase):
     def test_recent_and_day_boundaries(self):
         for gap, expected in [(0, "recent_ping"), (120, "recent_ping"), (121, None),
                               (86400, None), (86401, "returning_user")]:
-            with self.subTest(gap=gap), Game(self.book) as game:
+            with self.subTest(gap=gap), Game(self.always_recent) as game:
                 game.ping(1, 1, now=1000)
                 self.assertEqual(game.ping(1, 1, now=1000 + gap).event_id, expected)
 
@@ -60,23 +62,28 @@ class ContextTests(unittest.TestCase):
                 # Replays beyond the bounded observation window may count again.
                 self.assertEqual(game.ping(1, 1, now=1000 + DEDUPE_SECONDS + 1, message_id=99).count, 3)
 
-    def test_schema_one_migrates_without_resetting_counts_or_inventing_absence(self):
+    def test_legacy_schema_is_rejected_without_migration_or_file_leak(self):
         with tempfile.TemporaryDirectory() as folder:
             database = Path(folder) / "old.sqlite3"
             with closing(sqlite3.connect(database)) as db, db:
-                db.execute("""CREATE TABLE relationships (
-                    guild_id INTEGER, user_id INTEGER, count INTEGER,
-                    last_phrase_id TEXT, last_reply_count INTEGER DEFAULT 0,
-                    PRIMARY KEY(guild_id, user_id))""")
-                db.execute("INSERT INTO relationships VALUES (1, 1, 10, 'old.phrase', 10)")
+                db.execute("CREATE TABLE original (value TEXT)")
+                db.execute("INSERT INTO original VALUES ('preserve')")
                 db.execute("PRAGMA user_version = 1")
-            with Game(self.book, database) as game:
-                reply = game.ping(1, 1, now=1000000)
-                self.assertEqual(reply.count, 11)
-                self.assertIsNone(reply.event_id)
-                self.assertEqual(game.ping(1, 2, now=1000000).event_id, "first_user_ping")
+            with self.assertRaisesRegex(ValueError, "Stop the program, delete"):
+                Game(self.book, database)
             with closing(sqlite3.connect(database)) as db, db:
-                self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 2)
+                self.assertEqual(db.execute("PRAGMA user_version").fetchone()[0], 1)
+                self.assertEqual(db.execute("SELECT value FROM original").fetchone()[0], "preserve")
+            # Windows permits deletion only if the rejected connection was closed.
+            database.unlink()
+
+    def test_unversioned_existing_database_is_not_silently_reused(self):
+        with tempfile.TemporaryDirectory() as folder:
+            database = Path(folder) / "unknown.sqlite3"
+            with closing(sqlite3.connect(database)) as db, db:
+                db.execute("CREATE TABLE unrelated (value TEXT)")
+            with self.assertRaisesRegex(ValueError, "migration is intentionally not supported"):
+                Game(self.book, database)
 
     def test_cooldowns_are_atomic_persistent_and_allow_exact_boundary(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -113,3 +120,18 @@ class ContextTests(unittest.TestCase):
                 else:
                     with self.subTest(change=change), self.assertRaises(PhraseError):
                         PhraseBook.load(path)
+
+    def test_recent_chance_and_current_file_version_are_validated(self):
+        raw = json.loads(DEFAULT_PHRASES.read_text())
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "phrases.json"
+            for bad in (0, -1, True, 1.5, "3"):
+                with self.subTest(bad=bad):
+                    raw["context"]["recent_one_in"] = bad
+                    path.write_text(json.dumps(raw))
+                    with self.assertRaisesRegex(PhraseError, "recent_one_in"):
+                        PhraseBook.load(path)
+            raw["schema_version"] = 2
+            path.write_text(json.dumps(raw))
+            with self.assertRaisesRegex(PhraseError, "schema_version must be 3"):
+                PhraseBook.load(path)

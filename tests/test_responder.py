@@ -1,4 +1,5 @@
 from contextlib import closing
+from dataclasses import replace
 import asyncio
 from pathlib import Path
 import sqlite3
@@ -15,7 +16,9 @@ class ResponderTests(unittest.IsolatedAsyncioTestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.database = Path(self.temp.name) / "game.sqlite3"
-        self.game = await AsyncGame.open(PhraseBook.load(), self.database)
+        book = PhraseBook.load()
+        book = PhraseBook(book.tiers, book.events, replace(book.rules, recent_one_in=1))
+        self.game = await AsyncGame.open(book, self.database)
         self.addAsyncCleanup(self.game.close)
         self.now = 1000
         self.responder = Responder(self.game, clock=lambda: self.now)

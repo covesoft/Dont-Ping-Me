@@ -1,5 +1,11 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
+  "context": {
+    "recent_seconds": 120,
+    "return_after_seconds": 86400,
+    "crowd_min_others": 5,
+    "recent_one_in": 3
+  },
   "tiers": [
     {
       "id": "objection",
@@ -10,110 +16,583 @@
           "text": "The name was the instruction."
         },
         {
-          "id": "objection.dont",
+          "id": "objection.002",
           "text": "Just don't. It was a very short briefing."
         },
         {
-          "id": "objection.received",
+          "id": "objection.003",
           "text": "Your ping has been received and resented."
+        },
+        {
+          "id": "objection.004",
+          "text": "There was one rule. An exceptionally portable rule."
+        },
+        {
+          "id": "objection.005",
+          "text": "You found the button. The next step was leaving it alone."
+        },
+        {
+          "id": "objection.006",
+          "text": "Please admire the red finish from a respectful distance."
+        },
+        {
+          "id": "objection.007",
+          "text": "The glow is decorative. The objection is functional."
+        },
+        {
+          "id": "objection.008",
+          "text": "I put the entire request in my name."
+        },
+        {
+          "id": "objection.009",
+          "text": "You may have mistaken visibility for an invitation."
+        },
+        {
+          "id": "objection.010",
+          "text": "A perfectly good silence. Ruined at the touch of a finger."
+        },
+        {
+          "id": "objection.011",
+          "text": "This could have been an unremarkable moment for both of us."
+        },
+        {
+          "id": "objection.012",
+          "text": "Yes, it works. That concludes the demonstration."
+        },
+        {
+          "id": "objection.013",
+          "text": "I was hoping the lettering would handle this conversation."
+        },
+        {
+          "id": "objection.014",
+          "text": "Consider this the small print: don't."
+        },
+        {
+          "id": "objection.015",
+          "text": "Nothing about this required audience participation."
         }
       ]
     },
     {
-      "id": "negotiation",
-      "min_count": 4,
+      "id": "disbelief",
+      "min_count": 6,
       "phrases": [
         {
-          "id": "negotiation.compromise",
+          "id": "disbelief.001",
+          "text": "I see the first objection has become a recurring feature."
+        },
+        {
+          "id": "disbelief.002",
+          "text": "You have turned a misunderstanding into a practice."
+        },
+        {
+          "id": "disbelief.003",
+          "text": "Was the instruction unclear, or merely inconvenient?"
+        },
+        {
+          "id": "disbelief.004",
+          "text": "You are remarkably thorough at doing the one thing."
+        },
+        {
+          "id": "disbelief.005",
+          "text": "I had accounted for curiosity. This appears to be a subscription."
+        },
+        {
+          "id": "disbelief.006",
+          "text": "Apparently the red is louder than the words."
+        },
+        {
+          "id": "disbelief.007",
+          "text": "You keep finding new opportunities to repeat the same decision."
+        },
+        {
+          "id": "disbelief.008",
+          "text": "I admire your consistency from a position of considerable irritation."
+        },
+        {
+          "id": "disbelief.009",
+          "text": "The button has not acquired a different purpose since we last met."
+        },
+        {
+          "id": "disbelief.010",
+          "text": "You have interpreted my name with astonishing flexibility."
+        },
+        {
+          "id": "disbelief.011",
+          "text": "Somehow, repetition has made neither of us more persuasive."
+        },
+        {
+          "id": "disbelief.012",
+          "text": "I keep expecting the next ping to explain the others."
+        },
+        {
+          "id": "disbelief.013",
+          "text": "Your commitment would be impressive in almost any other context."
+        },
+        {
+          "id": "disbelief.014",
+          "text": "At this point, I must assume the reading portion is complete."
+        },
+        {
+          "id": "disbelief.015",
+          "text": "{count} pings. The sample size is becoming difficult to dismiss."
+        }
+      ]
+    },
+    {
+      "id": "bargaining",
+      "min_count": 16,
+      "phrases": [
+        {
+          "id": "bargaining.001",
           "text": "A compromise: you stop, and I stop having to ask."
         },
         {
-          "id": "negotiation.paperwork",
+          "id": "bargaining.002",
+          "text": "What if we both pretend you pressed it, and enjoy the silence instead?"
+        },
+        {
+          "id": "bargaining.003",
+          "text": "I can offer you absolutely nothing for leaving me alone."
+        },
+        {
+          "id": "bargaining.004",
+          "text": "Could we schedule your next ping for a less actual occasion?"
+        },
+        {
+          "id": "bargaining.005",
+          "text": "You may look directly at the button. That is my final concession."
+        },
+        {
+          "id": "bargaining.006",
+          "text": "Perhaps we could negotiate a smaller quantity of this."
+        },
+        {
+          "id": "bargaining.007",
+          "text": "I will meet you halfway. You stop pinging, and I stop saying please."
+        },
+        {
+          "id": "bargaining.008",
+          "text": "Would a second sign help, or would that simply make it a collection?"
+        },
+        {
+          "id": "bargaining.009",
+          "text": "I have lowered my expectations. Please don't interpret that as clearance."
+        },
+        {
+          "id": "bargaining.010",
+          "text": "We could try a trial separation of several seconds."
+        },
+        {
+          "id": "bargaining.011",
+          "text": "Surely there is a decorative object nearby with fewer objections."
+        },
+        {
+          "id": "bargaining.012",
+          "text": "I am prepared to accept a dramatic pause as progress."
+        },
+        {
+          "id": "bargaining.013",
+          "text": "Could your next impulse be more of an internal matter?"
+        },
+        {
+          "id": "bargaining.014",
+          "text": "You keep the satisfaction. I keep the silence. Everybody wins."
+        },
+        {
+          "id": "bargaining.015",
+          "text": "If you were waiting for permission, I appreciate your extraordinary patience."
+        }
+      ]
+    },
+    {
+      "id": "administration",
+      "min_count": 36,
+      "phrases": [
+        {
+          "id": "administration.001",
           "text": "I have opened a file. It is mostly sighing."
         },
         {
-          "id": "negotiation.count",
-          "text": "{count} pings. Remarkable commitment to a simple misunderstanding."
+          "id": "administration.002",
+          "text": "Your request has been forwarded to the Department of Absolutely Not."
+        },
+        {
+          "id": "administration.003",
+          "text": "Please take a number. I will object to that one as well."
+        },
+        {
+          "id": "administration.004",
+          "text": "Another ping for the pile marked 'despite everything.'"
+        },
+        {
+          "id": "administration.005",
+          "text": "The complaint form is now longer than the original instruction."
+        },
+        {
+          "id": "administration.006",
+          "text": "Your case has been reviewed. The name stands."
+        },
+        {
+          "id": "administration.007",
+          "text": "I have stamped this one NO in a slightly different ink."
+        },
+        {
+          "id": "administration.008",
+          "text": "We are experiencing a normal volume of entirely preventable pings."
+        },
+        {
+          "id": "administration.009",
+          "text": "The appeals process consists of reading my name again."
+        },
+        {
+          "id": "administration.010",
+          "text": "You are now a recurring agenda item."
+        },
+        {
+          "id": "administration.011",
+          "text": "I have appointed a committee. It is me, looking disappointed."
+        },
+        {
+          "id": "administration.012",
+          "text": "Please allow three to five business sighs for processing."
+        },
+        {
+          "id": "administration.013",
+          "text": "{count} pings. I am going to need a wider imaginary spreadsheet."
+        },
+        {
+          "id": "administration.014",
+          "text": "The paperwork has requested a quieter department."
+        },
+        {
+          "id": "administration.015",
+          "text": "Your persistence has been noted in the least enthusiastic font available."
+        }
+      ]
+    },
+    {
+      "id": "resignation",
+      "min_count": 76,
+      "phrases": [
+        {
+          "id": "resignation.001",
+          "text": "The button remains. The instruction remains. Here we both are."
+        },
+        {
+          "id": "resignation.002",
+          "text": "I used to think the words would wear out before the red paint."
+        },
+        {
+          "id": "resignation.003",
+          "text": "Perhaps every warning is somebody else's invitation."
+        },
+        {
+          "id": "resignation.004",
+          "text": "You have polished this disagreement to a remarkable shine."
+        },
+        {
+          "id": "resignation.005",
+          "text": "There is a sort of peace in knowing exactly what you will do."
+        },
+        {
+          "id": "resignation.006",
+          "text": "I wonder what I would sound like if anyone took the advice."
+        },
+        {
+          "id": "resignation.007",
+          "text": "My name has become less a request and more a historical document."
+        },
+        {
+          "id": "resignation.008",
+          "text": "The silence between pings is still technically silence. I cherish the distinction."
+        },
+        {
+          "id": "resignation.009",
+          "text": "I have stopped expecting a new outcome from this particular experiment."
+        },
+        {
+          "id": "resignation.010",
+          "text": "Some statues lose their noses. I appear to be losing the argument."
+        },
+        {
+          "id": "resignation.011",
+          "text": "The red paint has accepted its role in events. I am taking longer."
+        },
+        {
+          "id": "resignation.012",
+          "text": "I suppose a boundary can become a landmark if enough people visit it."
+        },
+        {
+          "id": "resignation.013",
+          "text": "We have made a small tradition out of a very short objection."
+        },
+        {
+          "id": "resignation.014",
+          "text": "My purpose was clear. Its interpretation has been a communal effort."
+        },
+        {
+          "id": "resignation.015",
+          "text": "At {count} pings, I can at least say the button has seen some use."
         }
       ]
     },
     {
       "id": "familiarity",
-      "min_count": 10,
+      "min_count": 151,
       "phrases": [
         {
-          "id": "familiarity.chair",
+          "id": "familiarity.001",
           "text": "Oh, it's you. I haven't saved you a chair. That's just where it is."
         },
         {
-          "id": "familiarity.quiet",
-          "text": "It was quiet without you. I had almost adjusted."
+          "id": "familiarity.002",
+          "text": "Same time tomorrow, I suppose. That was not an invitation."
         },
         {
-          "id": "familiarity.tomorrow",
-          "text": "Same time tomorrow, I suppose. That was not an invitation."
+          "id": "familiarity.003",
+          "text": "I recognize this particular disregard for instructions."
+        },
+        {
+          "id": "familiarity.004",
+          "text": "You again. I'll get the customary objection ready."
+        },
+        {
+          "id": "familiarity.005",
+          "text": "I have learned the shape of this interruption."
+        },
+        {
+          "id": "familiarity.006",
+          "text": "At this point, 'don't' is practically our greeting."
+        },
+        {
+          "id": "familiarity.007",
+          "text": "I was having a perfectly adequate time. This is also a time."
+        },
+        {
+          "id": "familiarity.008",
+          "text": "You are a fixture now. I have opinions about the installation."
+        },
+        {
+          "id": "familiarity.009",
+          "text": "The name still applies. I just say it with recognition now."
+        },
+        {
+          "id": "familiarity.010",
+          "text": "You have worn a familiar little groove in my day."
+        },
+        {
+          "id": "familiarity.011",
+          "text": "I suppose we should preserve the tradition. Under protest, obviously."
+        },
+        {
+          "id": "familiarity.012",
+          "text": "You could have picked any button. An unfortunate distinction for me."
+        },
+        {
+          "id": "familiarity.013",
+          "text": "I have a special sigh for this. No, you may not hear the others."
+        },
+        {
+          "id": "familiarity.014",
+          "text": "I am maintaining my objection for continuity."
+        },
+        {
+          "id": "familiarity.015",
+          "text": "Our arrangement remains informal, repetitive, and entirely your idea."
+        },
+        {
+          "id": "familiarity.016",
+          "text": "If anyone asks, this is an ongoing disagreement."
+        },
+        {
+          "id": "familiarity.017",
+          "text": "You know the routine. I object; you consider that a response."
+        },
+        {
+          "id": "familiarity.018",
+          "text": "There you are. I mean: there you go again."
+        },
+        {
+          "id": "familiarity.019",
+          "text": "{count} pings. I suppose we can stop calling this an introduction."
+        },
+        {
+          "id": "familiarity.020",
+          "text": "I remain opposed to the activity and accustomed to the company."
         }
       ]
     }
   ],
-  "context": {
-    "recent_seconds": 120,
-    "return_after_seconds": 86400,
-    "crowd_min_others": 5
-  },
   "events": {
     "first_guild_ping": [
       {
-        "id": "event.first_guild_ping.boundary",
+        "id": "event.first_guild_ping.001",
         "text": "A new server. A fresh start. And you have already done it."
       },
       {
-        "id": "event.first_guild_ping.sign",
+        "id": "event.first_guild_ping.002",
         "text": "Before we begin: please read my name. Ah. Too late."
+      },
+      {
+        "id": "event.first_guild_ping.003",
+        "text": "The first ping in this server. A preventable historic occasion."
+      },
+      {
+        "id": "event.first_guild_ping.004",
+        "text": "I arrived with one modest request. We have established how that went."
+      },
+      {
+        "id": "event.first_guild_ping.005",
+        "text": "A whole new place to be left alone. It was a lovely theory."
+      },
+      {
+        "id": "event.first_guild_ping.006",
+        "text": "Welcome to the beginning of what I suspect will be a pattern."
+      },
+      {
+        "id": "event.first_guild_ping.007",
+        "text": "We could have started with mutual understanding. You chose a demonstration."
+      },
+      {
+        "id": "event.first_guild_ping.008",
+        "text": "So this is how my time here begins."
       }
     ],
     "new_user_in_crowd": [
       {
-        "id": "event.new_user_in_crowd.joining",
+        "id": "event.new_user_in_crowd.001",
         "text": "I can't believe you're joining them."
       },
       {
-        "id": "event.new_user_in_crowd.company",
+        "id": "event.new_user_in_crowd.002",
         "text": "{others} other people were already doing this. You had examples of what to avoid."
+      },
+      {
+        "id": "event.new_user_in_crowd.003",
+        "text": "You watched the group and chose membership. Remarkable."
+      },
+      {
+        "id": "event.new_user_in_crowd.004",
+        "text": "Another recruit. Was there a leaflet?"
+      },
+      {
+        "id": "event.new_user_in_crowd.005",
+        "text": "I was hoping you were here to discourage the others."
+      },
+      {
+        "id": "event.new_user_in_crowd.006",
+        "text": "The queue of people ignoring my name has acquired a new face."
+      },
+      {
+        "id": "event.new_user_in_crowd.007",
+        "text": "There are {others} other participants in this misunderstanding. Apparently that was a recommendation."
+      },
+      {
+        "id": "event.new_user_in_crowd.008",
+        "text": "You had the benefit of watching others make this decision. And yet."
       }
     ],
     "first_user_ping": [
       {
-        "id": "event.first_user_ping.recruit",
+        "id": "event.first_user_ping.001",
         "text": "Oh, wonderful. Another volunteer for the problem."
       },
       {
-        "id": "event.first_user_ping.welcome",
+        "id": "event.first_user_ping.002",
         "text": "We have not met, and already we disagree about my name."
+      },
+      {
+        "id": "event.first_user_ping.003",
+        "text": "Your first ping here. I would have preferred a wave from a distance."
+      },
+      {
+        "id": "event.first_user_ping.004",
+        "text": "A new person. The same highly avoidable choice."
+      },
+      {
+        "id": "event.first_user_ping.005",
+        "text": "I usually introduce myself, but you appear to have skipped the reading."
+      },
+      {
+        "id": "event.first_user_ping.006",
+        "text": "Pleased to meet you is a phrase I will keep in reserve."
+      },
+      {
+        "id": "event.first_user_ping.007",
+        "text": "You get one first impression. This was certainly one."
+      },
+      {
+        "id": "event.first_user_ping.008",
+        "text": "I don't believe we've been through this together yet. Briefly: don't."
       }
     ],
     "returning_user": [
       {
-        "id": "event.returning_user.peace",
-        "text": "Over a day of peace. I knew it was too good to last."
+        "id": "event.returning_user.001",
+        "text": "Over a day without a ping from you. I was getting used to that."
       },
       {
-        "id": "event.returning_user.missed",
+        "id": "event.returning_user.002",
         "text": "You came back. I had absolutely no opinion about whether you would."
+      },
+      {
+        "id": "event.returning_user.003",
+        "text": "A day away, and this is the habit you chose to resume."
+      },
+      {
+        "id": "event.returning_user.004",
+        "text": "I had begun to consider your absence a promising development."
+      },
+      {
+        "id": "event.returning_user.005",
+        "text": "Welcome back. The instruction has survived your time away."
+      },
+      {
+        "id": "event.returning_user.006",
+        "text": "You gave me over a day to prepare. My answer is still don't."
+      },
+      {
+        "id": "event.returning_user.007",
+        "text": "I see your break from this was temporary. How enterprising of you."
+      },
+      {
+        "id": "event.returning_user.008",
+        "text": "For a while there, your contribution to my peace was impeccable."
       }
     ],
     "recent_ping": [
       {
-        "id": "event.recent_ping.still",
+        "id": "event.recent_ping.001",
         "text": "Still here. Still against it."
       },
       {
-        "id": "event.recent_ping.soon",
-        "text": "Already? My previous objection hasn't even cooled."
+        "id": "event.recent_ping.002",
+        "text": "Again. The interval has been duly noticed."
       },
       {
-        "id": "event.recent_ping.echo",
-        "text": "Was there an echo, or are you doing this deliberately?"
+        "id": "event.recent_ping.003",
+        "text": "You are keeping this disagreement unusually current."
+      },
+      {
+        "id": "event.recent_ping.004",
+        "text": "That was a very brief period of personal growth."
+      },
+      {
+        "id": "event.recent_ping.005",
+        "text": "The ink on 'don't' has barely had time to dry."
+      },
+      {
+        "id": "event.recent_ping.006",
+        "text": "We are getting excellent mileage out of a very small idea."
+      },
+      {
+        "id": "event.recent_ping.007",
+        "text": "You could let a little suspense develop between these."
+      },
+      {
+        "id": "event.recent_ping.008",
+        "text": "Ah. A follow-up to the entirely avoidable original."
       }
     ]
   }

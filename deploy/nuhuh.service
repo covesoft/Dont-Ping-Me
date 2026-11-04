@@ -1,0 +1,19 @@
+[Unit]
+Description=Just Don't Discord bot
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=nuhuh
+Group=nuhuh
+WorkingDirectory=/opt/nuhuh
+EnvironmentFile=/etc/nuhuh.env
+ExecStart=/opt/nuhuh/.venv/bin/python /opt/nuhuh/discordbot.py
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGINT
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

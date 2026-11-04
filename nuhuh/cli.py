@@ -40,15 +40,15 @@ def _seconds(text: str) -> float:
 def demonstrate(phrases):
     """Exercise actual engine events with a virtual clock and several identities."""
     scenarios = [
-        (1, 1000000, "First ping in a guild"),
-        (1, 1000030, "Same user, thirty seconds later"),
-        (1, 1086431, "Same user, over a day later"),
-        (2, 1086600, "A second participant"),
-        (3, 1086800, "A third participant"),
-        (4, 1087000, "A fourth participant"),
-        (5, 1087200, "A fifth participant"),
-        (6, 1087400, "A newcomer joins five existing participants"),
-        (1, 1087600, "Ordinary tier reply after the recent window"),
+        (2, 1000000, "First ping in a guild"),
+        *[(2, 1000000 + n * 5, f"Repeat {n}, showing event/tier mixing") for n in range(1, 7)],
+        (2, 1086431, "Same user, over a day later"),
+        (3, 1086600, "A second participant"),
+        (4, 1086800, "A third participant"),
+        (5, 1087000, "A fourth participant"),
+        (6, 1087200, "A fifth participant"),
+        (7, 1087400, "A newcomer joins five existing participants"),
+        (2, 1087600, "Ordinary tier reply after the recent window"),
     ]
     with Game(phrases) as game:
         for user_id, now, label in scenarios:
@@ -56,6 +56,16 @@ def demonstrate(phrases):
             print(f"{label} [{reply.event_id or reply.tier_id}]")
             print(reply.text, flush=True)
             game.delivered(reply)
+
+
+def tour(phrases, guild_id, user_id):
+    """Preview the ordinary tier pools without changing a saved relationship."""
+    for index, tier in enumerate(phrases.tiers):
+        upper = str(phrases.tiers[index + 1].min_count - 1) if index + 1 < len(phrases.tiers) else "+"
+        span = f"{tier.min_count}-{upper}" if upper != "+" else f"{tier.min_count}+"
+        _, phrase = phrases.select(guild_id, user_id, tier.min_count, None)
+        print(f"[{span} / {tier.id}]")
+        print(phrase.text.format(count=tier.min_count, others=0), flush=True)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -67,12 +77,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--phrases", type=Path, default=DEFAULT_PHRASES, help="custom phrase JSON file")
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--pings", type=_pings, help="print N replies and exit instead of playing interactively")
-    mode.add_argument("--demo", action="store_true", help="show all event types with a disposable database and simulated time")
+    mode.add_argument("--demo", action="store_true", help="show context events and recent/tier mixing in a disposable game")
+    mode.add_argument("--tour", action="store_true", help="preview every count tier without changing saved data")
     parser.add_argument("--step-seconds", type=_seconds, default=0, help="advance simulated time after each ping (default: 0)")
     parser.add_argument("--debug", action="store_true", help="show count and tier beside each reply")
     args = parser.parse_args(argv)
     try:
         phrases = PhraseBook.load(args.phrases)
+        if args.tour:
+            tour(phrases, args.guild_id, args.user_id)
+            return 0
         if args.demo:
             demonstrate(phrases)
             return 0

@@ -9,12 +9,14 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 import math
+import json
 import sqlite3
 import time
 
 from .phrases import Context, MAX_COUNT, PhraseBook
 
 DEDUPE_SECONDS = 86400
+HISTORY_LIMIT = 5
 
 
 def timestamp(value: float | None) -> float:
@@ -55,8 +57,15 @@ class Game:
         try:
             with self._transaction():
                 version = self._db.execute("PRAGMA user_version").fetchone()[0]
-                if version not in (0, 1, 2):
-                    raise ValueError(f"Unsupported database schema version {version}")
+                tables = self._db.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+                ).fetchall()
+                if version not in (0, 3) or (version == 0 and tables):
+                    raise ValueError(
+                        f"Unsupported alpha database schema {version} at {database}. "
+                        "Stop the program, delete this database and its matching sidecars, then restart. "
+                        "Automatic migration is intentionally not supported."
+                    )
                 self._db.execute("""
                     CREATE TABLE IF NOT EXISTS relationships (
                         guild_id INTEGER NOT NULL,
@@ -64,12 +73,12 @@ class Game:
                         count INTEGER NOT NULL CHECK (count >= 1),
                         last_phrase_id TEXT,
                         last_reply_count INTEGER NOT NULL DEFAULT 0,
+                        last_ping_at REAL,
+                        last_attempt_at REAL,
+                        recent_phrase_ids TEXT NOT NULL DEFAULT '[]',
                         PRIMARY KEY (guild_id, user_id)
                     )
                 """)
-                if version < 2:
-                    self._db.execute("ALTER TABLE relationships ADD COLUMN last_ping_at REAL")
-                    self._db.execute("ALTER TABLE relationships ADD COLUMN last_attempt_at REAL")
                 self._db.execute("""CREATE TABLE IF NOT EXISTS seen_messages (
                     message_id INTEGER PRIMARY KEY, observed_at REAL NOT NULL
                 )""")
@@ -78,7 +87,7 @@ class Game:
                     guild_id INTEGER NOT NULL, channel_id INTEGER NOT NULL,
                     last_attempt_at REAL NOT NULL, PRIMARY KEY(guild_id, channel_id)
                 )""")
-                self._db.execute("PRAGMA user_version = 2")
+                self._db.execute("PRAGMA user_version = 3")
         except BaseException:
             self._db.close()
             raise
@@ -111,7 +120,7 @@ class Game:
                 if not inserted:
                     return None
             row = self._db.execute(
-                "SELECT count, last_phrase_id, last_ping_at FROM relationships WHERE guild_id=? AND user_id=?",
+                "SELECT count, last_phrase_id, last_ping_at, recent_phrase_ids FROM relationships WHERE guild_id=? AND user_id=?",
                 (guild_id, user_id),
             ).fetchone()
             count, last_id = (row[0] + 1, row[1]) if row else (1, None)
@@ -123,10 +132,11 @@ class Game:
             other_users = participants - int(row is not None)
             elapsed = max(0, now - row[2]) if row and row[2] is not None else None
             context = Context(participants == 0, row is None, other_users, elapsed)
-            event_id = self.phrases.event_for(context)
-            tier, phrase = self.phrases.select(guild_id, user_id, count, last_id)
+            event_id = self.phrases.event_for(context, guild_id, user_id, count)
+            recent = tuple(json.loads(row[3])) if row else ()
+            tier, phrase = self.phrases.select(guild_id, user_id, count, last_id, recent_phrase_ids=recent)
             if event_id:
-                phrase = self.phrases.select_event(event_id, guild_id, user_id, count, last_id)
+                phrase = self.phrases.select_event(event_id, guild_id, user_id, count, last_id, recent_phrase_ids=recent)
             last_ping_at = max(now, row[2]) if row and row[2] is not None else now
             self._db.execute(
                 """INSERT INTO relationships (guild_id, user_id, count, last_ping_at) VALUES (?, ?, ?, ?)
@@ -169,12 +179,20 @@ class Game:
             return True
 
     def delivered(self, reply: Reply) -> None:
-        """Record only successful sends; older acknowledgements cannot overwrite newer ones."""
+        """Remember successful replies only; older acknowledgements cannot overwrite newer ones."""
         with self._transaction():
-            self._db.execute(
-                """UPDATE relationships SET last_phrase_id=?, last_reply_count=?
+            row = self._db.execute(
+                """SELECT recent_phrase_ids FROM relationships
                    WHERE guild_id=? AND user_id=? AND count>=? AND last_reply_count<?""",
-                (reply.phrase_id, reply.count, reply.guild_id, reply.user_id, reply.count, reply.count),
+                (reply.guild_id, reply.user_id, reply.count, reply.count),
+            ).fetchone()
+            if row is None:
+                return
+            recent = (json.loads(row[0]) + [reply.phrase_id])[-HISTORY_LIMIT:]
+            self._db.execute(
+                """UPDATE relationships SET last_phrase_id=?, last_reply_count=?, recent_phrase_ids=?
+                   WHERE guild_id=? AND user_id=?""",
+                (reply.phrase_id, reply.count, json.dumps(recent), reply.guild_id, reply.user_id),
             )
 
     def close(self) -> None:

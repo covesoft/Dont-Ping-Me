@@ -2,243 +2,208 @@
 
 **The name was the instruction.**
 
-A tiny game about repeatedly bothering something that explicitly asked you not
-to. It remembers. Its objections become increasingly familiar.
+Mention the bot. It objects. Mention it again. It remembers.
 
-Internal project name: **nuhuh**. Working public name: **Just Don't**.
+An ornery red button, worn familiar by people ignoring one very simple request.
+It progresses from objection to disbelief, bargaining, bureaucracy, resignation,
+and an attachment it would prefer you didn't mention.
 
-## Current build: v0.2.0
+Internal project name: **nuhuh**. Current version: **0.3.0**.
 
-The terminal game and Discord bot share an engine. Context events, persistent
-cooldowns, replay protection, and the adapter are implemented and tested without
-logging into Discord. A live test-server check is still needed. Phrases and tier
-thresholds are temporary material for the later writing pass.
+## Try it without Discord
 
-**Offline play needs only Python 3.11+**, without dependencies, account, or token.
-Tested on Python 3.12. Discord mode additionally uses `requirements.txt`.
-
-## Try the events
-
-Open a terminal in this folder:
+Python **3.11+** is enough. No packages, token, account, network connection,
+or bot installation are required for terminal play.
 
 ```sh
+git clone https://github.com/covesoft/Dont-Ping-Me.git
+cd Dont-Ping-Me
 python -m nuhuh --demo
 ```
 
-This disposable in-memory demonstration uses fixed sample identities and a
-virtual clock: first contact, recent repeat, day-long absence, and a newcomer
-joining five participants. It never sleeps or changes saved games. Only the
-`--phrases` option affects the scripted demo; other simulation options do not.
-
-## Play
+Use `python3` or `py` if that is your system's command. Two more ways to play:
 
 ```sh
+python -m nuhuh --tour
 python -m nuhuh
 ```
 
-Press **Enter** to ping; `/quit` to leave. Ctrl+C and end-of-input also exit.
-`/wait 86401` advances simulated time by just over a day without actually waiting.
-Use `python3` or `py` if that is your system's Python command.
+`--tour` previews one line from every count tier without changing saved data.
+`--demo` uses a disposable game and virtual clock to demonstrate context events
+and the mix of recent-ping and tier replies. Both use the actual phrase selector.
 
-Guild/user IDs default to `1`; counts persist in `.nuhuh/demo.sqlite3`, beneath
-the current folder. Run again to continue, or choose another relationship:
+In interactive play, press **Enter** to ping, `/quit` to leave, or `/wait 86401`
+to simulate just over a day away. No real waiting occurs. Counts persist in
+`.nuhuh/demo.sqlite3` beneath your current folder. Resume by running again.
 
 ```sh
 python -m nuhuh --guild-id 123 --user-id 456
+python -m nuhuh --db :memory: --pings 160 --step-seconds 5 --debug
 ```
 
-IDs are positive integers and need not identify real accounts. Returning to
-previous IDs resumes their relationship. To explore count tiers quickly:
+Guild/user IDs are adjustable positive integers, independent of real Discord
+accounts in this simulation. Changing either creates a separate relationship.
+`:memory:` starts fresh and leaves no database. `--debug` reveals count, tier,
+and selected event. Use `--help` for all options. Offline play has no cooldown;
+use an in-memory game for experiments with simulated future timestamps.
 
-```sh
-python -m nuhuh --db :memory: --pings 15 --step-seconds 180 --debug
-```
+## The personality
 
-The 180-second spacing moves beyond the recent-ping window. `--debug` shows
-count, tier, and selected event. `--pings` accepts 1–1,000. `:memory:` leaves no
-database. Simulated future times persist in file databases; use `:memory:` for
-time-travel experiments. The bot uses a separate database by default.
-Offline play has no response cooldown. Use `--help` for all options.
+There are **135 phrases**: 95 across six count tiers and 40 across five event
+pools. Each guild/user relationship progresses separately.
 
-## Run on Discord
+| Observed mentions | Stage |
+| --- | --- |
+| 1-5 | Objection |
+| 6-15 | Disbelief |
+| 16-35 | Bargaining |
+| 36-75 | Administrative coping |
+| 76-150 | Philosophical resignation |
+| 151+ | Reluctant familiarity |
 
-Create a virtual environment from this folder:
+First contact, a newcomer joining five or more existing participants, and a
+return after more than a day get their own contextual replies when enabled.
+Within 120 seconds of the user's previous ping, a seeded **one-in-three** draw
+can choose the recent-ping pool; ordinary tier replies appear otherwise. This
+is a probability, not a fixed every-third-response rule. Repeated play can still
+reveal the changing personality.
 
-```sh
-python -m venv .venv
-```
+Participants means people who have pinged in that guild. No member roster is
+needed. Each new qualifying message counts once, even if it mentions the bot
+several times. Suppressed or unsent responses still count. Only events observed
+by the running bot are tracked; there is no retrospective history scan.
+
+## Run the Discord bot
+
+For a fresh installation, create a venv and copy `.env.example` to `.env`.
+Put your token in `NUHUH_DISCORD_TOKEN`. An existing `.env` can be kept.
 
 Windows PowerShell:
 
 ```powershell
+python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-$env:NUHUH_DISCORD_TOKEN = "your private bot token"
-.\.venv\Scripts\python.exe bot.py
+Copy-Item .env.example .env
+# Edit .env with your private token.
+.\.venv\Scripts\python.exe discordbot.py
 ```
 
 Linux/macOS:
 
 ```sh
+python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
-export NUHUH_DISCORD_TOKEN='your private bot token'
-.venv/bin/python bot.py
+cp .env.example .env
+# Edit .env with your private token.
+.venv/bin/python discordbot.py
 ```
 
-`config.py` contains the paths and pacing constants and reads the token from
-the environment. No `.env` loader is included. Keep the real token private.
+`config.py` loads dotenv and exposes paths and pacing constants. Environment
+variables already set by the host take precedence. The real `.env` and runtime
+data are excluded from Git.
 
-Install your application to a test guild with the `bot` OAuth scope. Grant
-**View Channel** and **Send Messages** (permission integer `3072`) for an ordinary
-text channel. Leave all privileged intents disabled. The code requests only
-Guilds and Guild Messages. No member enumeration or message-content inspection
-is performed. The chosen plain channel-send method needs no administrator,
-read-history, mention-everyone, or embed permission; confirm this live.
+Install to a guild with the `bot` OAuth scope. In an ordinary text channel,
+grant **View Channel** and **Send Messages** (permission integer `3072`). Leave
+privileged intents disabled: the code enables only Guilds and Guild Messages.
+No administrator, message-history, embed, or mention-everyone permission is
+needed for the selected plain channel-send method. No slash commands need syncing.
 
-Mention the bot directly. It ignores bots, webhooks, DMs, threads, role/everyone
-mentions, system messages, and edits. Pinging replies qualify when the bot is
-in the user-mention list; non-pinging replies do not. Multiple mentions in one
-message count once. There are no slash commands to synchronize.
+The bot handles direct human mentions in ordinary guild text channels. It
+ignores DMs, threads, bots, webhooks, system messages, edits, and role/everyone
+mentions. Pinging replies qualify if the bot is in the user-mention list;
+non-pinging replies do not. Outgoing mention notifications are disabled.
 
-Default response-attempt cooldowns are **5 seconds per guild/user** and
-**2 seconds per channel**. Mentions still count during suppression or missing
-send permission. An in-flight send blocks further replies for that user/channel,
-even after cooldown, while independent users/channels proceed. Nothing queues
-a backlog of jokes. Attempt cooldowns persist across restarts and start before
-sending; failed/time-out sends consume cooldown without marking delivery.
-The timeout is 15 seconds. Outgoing mention notifications are disabled.
+Defaults: **5 seconds between attempts per guild/user**, **2 seconds per
+channel**, and a **15-second send timeout**. Attempt reservations persist across
+restarts, including failed attempts. In-flight sends suppress further responses
+for that user or channel while independent users/channels proceed. Nothing
+queues a backlog of jokes. Ctrl+C drains handlers and closes the database.
+Run one process per token/database. See [DEPLOYMENT.md](DEPLOYMENT.md) for Linux hosting.
 
-Ctrl+C drains in-flight handlers before closing the database. Run one bot
-process per token/database.
+## Change the voice
 
-References: [discord.py API](https://discordpy.readthedocs.io/en/stable/api.html),
-[Discord Gateway intents](https://docs.discord.com/developers/events/gateway).
+Edit `nuhuh/data/phrases.json`, then restart. For CLI experiments, supply
+`--phrases my_phrases.json`; for Discord change `PHRASES_PATH` in `config.py`.
+There is no live phrase editor or runtime AI service.
 
-## Context events
+The current file uses **schema version 3**. Each tier has an `id`, `min_count`,
+and `phrases` list of `{ "id": "stable.id", "text": "Your line." }` objects.
+The first tier starts at 1; subsequent thresholds increase. The final tier has
+no upper bound other than the supported integer count limit, 2^63 − 1.
 
-The first enabled matching event overrides the normal count-tier pool:
-
-| Priority | Event ID | Condition |
-| --- | --- | --- |
-| 1 | `first_guild_ping` | No participant has previously pinged in this guild |
-| 2 | `new_user_in_crowd` | This user's first ping here; at least five other participants |
-| 3 | `first_user_ping` | This user's first recorded ping in the guild |
-| 4 | `returning_user` | More than 86,400 seconds since their previous observed ping here |
-| 5 | `recent_ping` | At most 120 seconds since their previous observed ping here |
-| Fallback | Count tier | No enabled event matches |
-
-Participants means people who have pinged, rather than the guild member count.
-Timing uses UTC observation timestamps and includes suppressed mentions. At
-exactly one day, return does not fire; at exactly 120 seconds, recent does.
-Thresholds live in the JSON `context` object.
-
-Missing or empty event pools disable those events and matching continues down
-the table. Events currently have their own pools, independent of count tiers.
-Frequent pings can keep selecting the recent event; counts and tiers still
-advance. New condition types require engine code; editing existing pools and
-thresholds requires only JSON changes and a restart. No unrelated activity is read.
-
-## Customize phrases
-
-Edit `nuhuh/data/phrases.json`. For CLI use `--phrases my_phrases.json`; for the
-bot set `PHRASES_PATH` in `config.py`. Minimal version 2 example:
+Context settings:
 
 ```json
-{
-  "schema_version": 2,
-  "context": {
-    "recent_seconds": 120,
-    "return_after_seconds": 86400,
-    "crowd_min_others": 5
-  },
-  "events": {
-    "new_user_in_crowd": [
-      {"id": "crowd.joining", "text": "I can't believe you're joining them."}
-    ]
-  },
-  "tiers": [
-    {
-      "id": "objection",
-      "min_count": 1,
-      "phrases": [
-        {"id": "objection.sign", "text": "The name was the instruction."},
-        {"id": "objection.count", "text": "{count} pings. I see."}
-      ]
-    }
-  ]
+"context": {
+  "recent_seconds": 120,
+  "return_after_seconds": 86400,
+  "crowd_min_others": 5,
+  "recent_one_in": 3
 }
 ```
 
-- First tier starts at 1; subsequent minimum counts strictly increase. The
-  final tier continues to the supported count limit of 2^63 − 1.
-- Every tier needs a phrase. Empty event pools intentionally disable events.
-- Tier IDs are unique; phrase IDs are unique across all tiers and events.
-  IDs start with a lowercase letter, using lowercase letters, digits, dots,
-  underscores, or hyphens. Keep IDs stable when editing text.
-- `{count}` and `{others}` are supported. `{others}` counts other recorded
-  participants in the guild. Use `{{` and `}}` for literal braces.
-- Text must be nonempty and fit in 2,000 UTF-16 units after substitution.
-- Context thresholds are positive integers; recent must be shorter than return.
-- Comments/trailing commas are invalid JSON. Restart after editing.
+Event pools live in `events`, in this priority order:
 
-Validation happens before opening the database. Version 1 count-only JSON still
-works, without events. Removed phrase IDs are handled gracefully.
+| Event ID | Condition |
+| --- | --- |
+| `first_guild_ping` | First recorded participant in a guild |
+| `new_user_in_crowd` | User's first ping here, with at least `crowd_min_others` prior participants |
+| `first_user_ping` | User's first recorded ping in the guild |
+| `returning_user` | Gap strictly greater than `return_after_seconds` |
+| `recent_ping` | Gap at most `recent_seconds`, and the seeded chance succeeds |
 
-## Engine and data
+The first enabled match wins. Missing/empty event pools disable those events;
+ordinary tiers remain the fallback. `recent_one_in: 1` always selects a matching
+recent event. To disable it, empty/remove its event pool. First-contact/return
+matches are not subject to that chance. Event pools are independent of tiers.
 
-SQLite stores guild/user IDs, counts, last observed ping and response-attempt
-times, last delivered phrase ID, and count at delivery. Channel attempt times
-and bounded message-ID replay state are also stored. No names or message text
-are stored. Relationships persist until deleted.
+Tier pools must be nonempty. Tier IDs are unique; phrase IDs are unique across
+all pools. IDs begin with a lowercase letter and use lowercase letters, digits,
+dots, underscores, or hyphens. Keep IDs stable when editing text.
+`{count}` and `{others}` are the allowed placeholders; use `{{`/`}}` for literal
+braces. Text must fit in 2,000 UTF-16 units after substitution. JSON comments,
+unknown fields, duplicate keys/IDs, invalid thresholds, and unsafe placeholders
+produce startup errors before the game database is opened.
 
-`Game.ping()` counts and selects atomically. A known message ID returns `None`
-without changing count/timestamps. A new interaction returns a `Reply`; call
-`Game.delivered()` after a successful send. Unsent interactions still count.
-Late acknowledgements cannot overwrite newer delivery state.
+The draw is deterministic for the same IDs, count, configuration, matching
+context, and delivery history. Editing pools can change future choices. The
+last five delivered phrase IDs are excluded when possible. Tiny pools relax
+the oldest exclusions first, keeping the newest excluded where an alternative exists.
+Count-tier draws use SHA-256 over compact JSON `[1,guild,user,count,tier_id]`;
+events use `[2,guild,user,count,"event:" + event_id]`. The recent gate uses
+`[3,guild,user,count,"recent_gate"]`, modulo `recent_one_in`. Digests use UTF-8
+and unsigned big-endian conversion. No shared global RNG is involved.
 
-Count-tier selection hashes compact JSON `[1, guild_id, user_id, count, tier_id]`
-with SHA-256. Events use `[2, guild_id, user_id, count, "event:" + event_id]`.
-Interpret the UTF-8 digest as an unsigned big-endian integer, modulo eligible
-phrase count. Preserve file order and exclude the last delivered phrase ID
-when alternatives exist. Reproducibility requires unchanged configuration,
-matching context, and delivery history. Pool edits can change future choices.
+## Data and alpha resets
 
-`AsyncGame` runs SQLite on a dedicated thread; `Responder` coordinates sends.
-Each `Game` connection belongs to its creating thread. Independent connections
-safely share a database. Schema v1 databases migrate to v2 without resetting
-counts/history. Existing users begin with unknown timing context, so migration
-does not invent an absence or first interaction.
+Bot data lives in `.nuhuh/bot.sqlite3`, anchored to the project folder. CLI
+simulation data is separate. See [PRIVACY.md](PRIVACY.md) for stored fields,
+retention, and deletion procedures.
 
-Message IDs have a 24-hour observation window, pruned on the next mention.
-Replays beyond that window can count again. Channel attempt rows older than
-a day (or channel cooldown, if longer) are pruned on response claims. No history
-is scanned after downtime. A crash between send and delivery acknowledgement
-can affect repetition avoidance; timeouts can leave delivery uncertain. The
-bot does not retry that observed message within its replay window.
+Empty databases initialize directly with schema 3. This alpha update needs a
+one-time reset of older schema-1/2 databases to add the bounded reply history.
+There is **no migration code**: older versions or nonempty unversioned databases get a reset instruction. Stop the program, remove the
+identified alpha database and matching sidecars, then restart. Never delete a
+live database. Old version-1/2 phrase files should be replaced with the supplied
+version-3 file before further customization.
 
-Demo database: `.nuhuh/demo.sqlite3`, relative to the terminal's current folder.
-Bot database: `.nuhuh/bot.sqlite3`, anchored to the project folder. To reset,
-stop the program and delete the appropriate database and matching sidecars.
-To delete a person's relationships, stop the bot and execute the parameterized
-SQLite statement `DELETE FROM relationships WHERE user_id = ?` with their ID.
-Replay rows have no user IDs and expire as above; channel rows track pacing.
-There is no public data-deletion command yet.
-
-## Development
+## Tests and release
 
 ```sh
 python -m unittest discover -v
+python -X dev -W error::ResourceWarning tools/check_resources.py
 ```
 
-Tests cover context boundaries/priority, migration, persistence, determinism,
-replays, cooldowns, concurrency, in-flight sends, failures/timeouts, validation,
-and CLI behavior. With requirements installed, five adapter/lifecycle tests
-use actual discord.py types and fake messages/sends, without login or network
-calls. Those five are skipped when Discord is not installed.
+The resource runner retains connection objects and fails if any SQLite handle
+was not explicitly closed. This catches leaks even on platforms that allow
+open files to be deleted. With requirements installed, tests include real
+Discord-library lifecycle checks using fake messages/sends; no login occurs.
+Without Discord, five adapter tests skip and the offline tests still run.
 
-The working repository has local Git history. The ZIP omits Git metadata.
-Initialize an extracted copy using `git init -b main`, `git add .`, and
-`git commit -m "Add nuhuh game and Discord adapter"`, with your normal Git identity.
-No GitHub remote has been created or pushed by this build.
+GitHub Actions is configured for Ubuntu/Windows and Python 3.11/3.13. The
+workflow runs after these changes are pushed; configuration is not a claim that
+hosted CI has already passed. See [CHANGELOG.md](CHANGELOG.md),
+[RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md), and [SUBMISSION.md](SUBMISSION.md).
+The private planning bible remains under ignored `docs/`.
 
-See `NUHUH_PROJECT_BIBLE.md` for design and progress. Next: a live test-server
-check, then final phrase work and artwork. Choose a license before public release.
+MIT licensed. See [LICENSE](LICENSE).
