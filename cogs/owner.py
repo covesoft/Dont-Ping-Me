@@ -46,7 +46,7 @@ def distribution_text(label, distribution):
 
 def size_text(usage, connected_guilds):
     heading = (f"I'm connected to **{connected_guilds:,} guilds**.\n"
-               f"I've recorded **{usage.total_pesters:,} pesters** across "
+               f"I've been pestered **{usage.total_pesters:,} times** across "
                f"**{usage.per_guild.samples:,} guilds** and "
                f"**{usage.per_relationship.samples:,} guild/user relationships**.")
     if not usage.total_pesters:
